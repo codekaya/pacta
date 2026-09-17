@@ -39,12 +39,21 @@ feels like a slogan, drop it and say the plain version.
 > Once he hits send, that's it. There's no chargeback on those rails. If the clinic
 > stops replying, what he has is a WhatsApp chat.
 >
-> And that happens — take the deposit, disappear, or the clinic turns out to be
-> someone's apartment. If you search for it you'll find the forums, and some clinics
-> put warnings about it on their own websites, which tells you how common it is.
-> [If you have a specific case or a number, say it here — it hits harder than "it happens".]
+> And that happens a lot. I'll give you one I can actually point at: a woman in the
+> UK, asking a clinic in Istanbul for eight hundred euros back. They stopped
+> replying in October. She posted the review in January. Same amount as my demo,
+> which I didn't plan.
 >
-> But the clinic isn't the bad guy either. They say non-refundable because people
+> That one's public on Trustpilot. The rest live in Reddit threads and review sites,
+> and the pattern is identical every time: take the deposit, stop answering.
+>
+> And Turkey knows. Last April the health ministry brought in a whole new medical
+> tourism regulation — clinics need a licence to treat foreign patients, there are
+> fines, they've shut down a lot of unlicensed places. But that regulates who is
+> allowed to operate. Nobody's touched how the money moves. It's still a wire to a
+> stranger.
+>
+> And the clinic isn't the bad guy either. They say non-refundable because people
 > book and don't show up, and that's the only protection they have. So both sides
 > are defending themselves and nobody trusts anybody.
 >
@@ -168,6 +177,29 @@ And after what's real:
 > The refund math exists twice, once in Rust on-chain and once in TypeScript in the
 > app, with a shared test vector so they agree exactly. If they ever disagree, the
 > app refuses to send the payout.
+
+## Sources for the problem section
+
+Keep these straight in case someone asks where it comes from.
+
+- **1.4M patients, $3.02B, +39% per patient:** HİB (Hizmet İhracatçıları Birliği,
+  the services exporters' association), 2025 full year and Q1 2026.
+- **The €800 case:** Trustpilot review of corprocare.com by Monica Infante (GB),
+  1 star, 20 January 2026 — "they have refused to refund the 800 euros"; she says
+  communication stopped in October 2025. Overall 3.4/5 across 18 reviews, and
+  Trustpilot notes the company has not replied to negative reviews.
+  https://ca.trustpilot.com/review/corprocare.com
+- **The regulation:** Regulation on International Health Tourism and Tourist Health,
+  published in the Official Gazette on 26 April 2025; licensing, inspection and
+  penalties for unlicensed practice. Say "last April" and leave it there unless asked.
+- **"Shut down a lot of unlicensed places":** reported by industry and legal
+  commentary as hundreds in recent years — no official figure I could verify, so do
+  not put a number on it.
+- Deposits themselves are openly standard: clinics advertise fixed deposits (some
+  have a "$300 deposit" page) and normally state they are non-refundable.
+
+If you find a stronger case before you present — a news story, or a friend's — use
+that instead. First-hand beats a review every time.
 
 ## Questions you'll probably get
 
