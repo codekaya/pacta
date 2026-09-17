@@ -9,6 +9,7 @@
  * TW amounts are decimal numbers, not base units: convert with `toTwAmount` /
  * `fromTwAmount` so every policy calculation stays in bigint.
  */
+import { Networks, TransactionBuilder } from '@stellar/stellar-sdk';
 import { formatUsdc, parseUsdc, USDC_DECIMALS } from './money.ts';
 
 export const TW_TESTNET_URL = 'https://dev.api.trustlesswork.com';
@@ -93,12 +94,14 @@ export function fromTwAmount(amount: number): bigint {
 
 export class TrustlessWork {
   readonly baseUrl: string;
+  readonly networkPassphrase: string;
   readonly #apiKey: string;
 
-  constructor(apiKey: string, baseUrl: string = TW_TESTNET_URL) {
+  constructor(apiKey: string, baseUrl: string = TW_TESTNET_URL, networkPassphrase: string = Networks.TESTNET) {
     if (!apiKey) throw new Error('Trustless Work API key is missing (TW_API_KEY)');
     this.#apiKey = apiKey;
     this.baseUrl = baseUrl.replace(/\/$/, '');
+    this.networkPassphrase = networkPassphrase;
   }
 
   // ------------------------------------------------------------ lifecycle
@@ -183,7 +186,7 @@ export class TrustlessWork {
 
   async escrow(contractId: string): Promise<Escrow | undefined> {
     const query = new URLSearchParams({ validateOnChain: 'true' });
-    query.append('contractIds', contractId);
+    query.append('contractIds[]', contractId);
     const rows = await this.#request<Escrow[] | Escrow>('GET', `/helper/get-escrow-by-contract-ids?${query}`);
     return Array.isArray(rows) ? rows[0] : rows;
   }
@@ -191,7 +194,7 @@ export class TrustlessWork {
   /** Live token balance held by the escrow contract, base units. */
   async balance(contractId: string): Promise<bigint> {
     const query = new URLSearchParams();
-    query.append('addresses', contractId);
+    query.append('addresses[]', contractId);
     const rows = await this.#request<{ address: string; balance: number }[]>(
       'GET',
       `/helper/get-multiple-escrow-balance?${query}`,
@@ -207,7 +210,10 @@ export class TrustlessWork {
     const { unsignedTransaction } = await this.#request<{ unsignedTransaction?: string }>(method, path, body);
     if (!unsignedTransaction) throw new TrustlessWorkError(500, `${path} returned no unsignedTransaction`, path, undefined);
     const signedXdr = await sign(unsignedTransaction);
-    return this.#request<Sent>('POST', '/helper/send-transaction', { signedXdr });
+    const sent = await this.#request<Sent>('POST', '/helper/send-transaction', { signedXdr });
+    // TW answers with status + message only; the hash is derived from what we signed.
+    const hash = Buffer.from(TransactionBuilder.fromXDR(signedXdr, this.networkPassphrase).hash()).toString('hex');
+    return { ...sent, hash };
   }
 
   async #request<T>(method: string, path: string, body?: unknown): Promise<T> {

@@ -97,6 +97,7 @@ because the sandbox anchor caps single transfers.
 ```bash
 npm run tw -- arrival 10         # CLI: deploy → commit → fund → check-in → confirm → settle → release
 npm run tw -- cancel 10 10       # CLI: … → dispute → settle → resolve, procedure 10 days out
+npm run tw -- refund <C…>        # return a stuck escrow to the patient
 cd ../anchor && npm run demo     # TRY → USDC → TRY through the anchor
 ```
 
@@ -107,6 +108,7 @@ cd ../anchor && npm run demo     # TRY → USDC → TRY through the anchor
 | Escrow custody (Trustless Work), policy contract, USDC movement, anchor quotes, SEP-6 withdrawals | The anchor's bank rail; EUR → USDC for the patient |
 | Clinic licence number shown on the notice | Live Ministry of Health registry lookup — static list |
 | Agency share recorded on-chain | Agency paid by the clinic after release (split contract is next) |
+| Full refunds follow the policy to the stroop | Trustless Work deducts a 0.3% protocol fee from each payout, so a 100% refund lands as 99.7% |
 | — | Demo keys sign for every role server-side; the product uses an embedded wallet for patients |
 
 ## License

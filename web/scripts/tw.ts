@@ -96,10 +96,9 @@ async function ensureAccount(keypair: Keypair, trustline: boolean): Promise<void
 async function cmdWallets(): Promise<void> {
   const w = loadWallets(true);
   for (const name of WALLET_NAMES) {
-    // Pacta keys only sign; patient, clinic and agency hold USDC.
-    const holdsUsdc = name === 'patient' || name === 'clinic' || name === 'agency';
-    await ensureAccount(w[name], holdsUsdc);
-    const usdc = holdsUsdc ? await usdcBalance(w[name].publicKey()) : '—';
+    // Trustless Work rejects a deploy unless every role wallet trusts the escrow asset.
+    await ensureAccount(w[name], true);
+    const usdc = await usdcBalance(w[name].publicKey());
     log(`  ${name.padEnd(14)} ${w[name].publicKey()}  USDC ${usdc}`);
   }
   log(`\nHastaya test USDC'si:\n  cd ../anchor && CLINIC_SECRET=$(node -p 'require("../web/.tw-wallets.json").patient') npm run onramp -- 50`);
@@ -181,7 +180,8 @@ async function deployAndFund(tw: TrustlessWork, w: Wallets, amount: bigint, labe
   log(`  escrow ${EXPLORER}/contract/${contractId}`);
 
   step(`fund ${formatUsdc(amount)} USDC from patient`);
-  await tw.fund(contractId, amount, signer(w.patient), w.patient.publicKey());
+  const funded = await tw.fund(contractId, amount, signer(w.patient), w.patient.publicKey());
+  log(`  ${EXPLORER}/tx/${funded.hash}`);
   log(`  escrow balance ${formatUsdc(await tw.balance(contractId))} USDC`);
   return contractId;
 }
@@ -265,6 +265,18 @@ async function ledgerNow(): Promise<number> {
   return Math.floor(Date.parse(ledger!.closed_at) / 1000);
 }
 
+/** Returns a stuck escrow's whole balance to the patient (demo cleanup). */
+async function cmdRefund(contractId?: string): Promise<void> {
+  if (!contractId) throw new Error('usage: npm run tw -- refund <contractId>');
+  const tw = client();
+  const w = loadWallets(false);
+  const escrow = await tw.escrow(contractId);
+  if (!escrow?.flags?.disputed) await tw.dispute(contractId, signer(w.pactaRelease), w.pactaRelease.publicKey());
+  const balance = await tw.balance(contractId);
+  const sent = await tw.resolve(contractId, [{ address: w.patient.publicKey(), amount: balance }], signer(w.pactaResolver), w.pactaResolver.publicKey());
+  log(`✓ ${formatUsdc(balance)} USDC back to patient ${EXPLORER}/tx/${sent.hash}`);
+}
+
 async function cmdShow(contractId?: string): Promise<void> {
   if (!contractId) throw new Error('usage: npm run tw -- show <contractId>');
   const tw = client();
@@ -279,6 +291,7 @@ const commands: Record<string, (...a: string[]) => Promise<void>> = {
   wallets: cmdWallets,
   arrival: cmdArrival,
   cancel: cmdCancel,
+  refund: cmdRefund,
   show: cmdShow,
 };
 

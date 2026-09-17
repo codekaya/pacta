@@ -50,7 +50,7 @@ export default async function DealPage({ params, searchParams }: Props) {
 
           <aside className="lg:col-span-5">
             <div className="lg:sticky lg:top-10">
-              <p className="text-sm text-muted">Deposit due</p>
+              <p className="text-sm text-muted">{deal.status === 'created' ? 'Deposit due' : 'Deposit paid'}</p>
               <p className="mt-1 font-serif text-5xl tracking-[-0.03em] tabular-nums">
                 {formatEur(deal.depositEurCents)}
               </p>
@@ -212,6 +212,7 @@ function SettlementPanel({ deal }: { deal: Deal }) {
       <p className="mt-4 text-sm leading-relaxed text-muted">
         Amounts come from the schedule written before payment. They sum to the escrow balance.
         {!refunded && deal.parties.agency && ' The escrow pays the clinic; the agency share is owed by the clinic.'}
+        {deal.mode === 'live' && ' Trustless Work deducts a 0.3% protocol fee from each payout.'}
       </p>
       <Receipts receipts={deal.receipts} />
     </section>
