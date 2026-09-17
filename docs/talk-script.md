@@ -151,17 +151,31 @@ gap. If you are at all tight, don't.)*
 
 ## Where this goes
 
-> Business side is simple. Clinic pays one to one and a half percent. Cards cost
-> them two and a half to four plus chargebacks after the patient flies home. Patient
-> pays nothing.
+> So where this is right now. I've listed over a hundred clinics, and this week I'm
+> cold DMing every one of them to find the first pilot. Nothing signed yet — I'd
+> rather say that than dress it up. What I'm looking for is one clinic that will
+> run real deposits through it.
 >
-> Next is pilot clinics, embedded wallets so the patient doesn't think about any of
-> this, agency split on-chain, audit, mainnet. And SCF Integration Track in November —
-> the nice thing there is my metrics are just two numbers anyone can count off the
-> contract: how much is held, and how many deals closed.
+> The money side is simple. Clinic pays one to one and a half percent. Cards cost
+> them two and a half to four, plus chargebacks after the patient flies home. The
+> patient pays nothing.
 >
-> What I actually need right now is two clinics willing to try it, and an intro for
-> the Integration Track. That's it — happy to take questions.
+> And none of this is specific to hair transplants. It's a deposit, a date, and a
+> refund schedule. Dental, IVF, aesthetic surgery — same product, same contract, I
+> just change the tiers. The clinic writes its own policy; I don't decide it.
+>
+> It's not specific to Turkey either. Thailand, Mexico, Hungary — same pattern: a
+> patient paying a stranger abroad, before they travel, on a rail with no recourse.
+> Turkey is the biggest one, and the one I know. The lira off-ramp is the part
+> that's country-specific, and that's exactly what the anchor handles — different
+> country, different anchor, everything above it stays.
+>
+> And honestly it's bigger than medical. Anything where someone pays a deposit up
+> front, to someone they've never met, against a date in the future. That's the
+> primitive I've built. I'm starting with the version I understand.
+>
+> What I need right now is two clinics willing to try it, and an intro for the SCF
+> Integration Track in November. That's it — happy to take questions.
 
 ---
 
