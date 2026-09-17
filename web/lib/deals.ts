@@ -73,6 +73,8 @@ export type Deal = {
   /** Kliniğin "hasta geldi" işareti. */
   arrivedAt?: number;
   receipts?: Receipt[];
+  /** Son işlemin hatası; sayfada gösterilir, bir sonraki denemede silinir. */
+  error?: string;
   settlement?: Settlement;
   createdAt: number;
 };

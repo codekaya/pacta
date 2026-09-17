@@ -5,6 +5,7 @@
  *   npm run tw -- arrival 10       deploy → fund → klinik "Arrived" → hasta onay → release
  *   npm run tw -- cancel 10 10     deploy → fund → PTK commit → dispute → PTK settle → resolve  (2. arg: işleme kalan gün)
  *   npm run tw -- show <C...>      escrow durumu + canlı bakiye
+ *   npm run tw -- topup            provalar arasında USDC'yi hastaya geri toplar
  *
  * Cüzdanlar web/.tw-wallets.json'da (gitignore'da). Hastaya test USDC'si:
  *   cd ../anchor && CLINIC_SECRET=$(node -p 'require("../web/.tw-wallets.json").patient') npm run onramp -- 1500
@@ -265,6 +266,31 @@ async function ledgerNow(): Promise<number> {
   return Math.floor(Date.parse(ledger!.closed_at) / 1000);
 }
 
+/**
+ * Rebalances the demo: clinic and agency send their USDC back to the patient,
+ * so the notice can be paid again. Every run of the demo drains the patient.
+ */
+async function cmdTopup(): Promise<void> {
+  const w = loadWallets(false);
+  for (const who of ['clinic', 'agency'] as const) {
+    const balance = await usdcBalance(w[who].publicKey());
+    if (!balance || Number(balance) <= 0) continue;
+    const source = await horizon.loadAccount(w[who].publicKey());
+    const tx = new TransactionBuilder(source, { fee: BASE_FEE, networkPassphrase: PASSPHRASE })
+      .addOperation(Operation.payment({ destination: w.patient.publicKey(), asset: USDC, amount: balance }))
+      .setTimeout(60)
+      .build();
+    tx.sign(w[who]);
+    await horizon.submitTransaction(tx);
+    log(`  ${who} → patient  ${balance} USDC`);
+  }
+  const left = await usdcBalance(w.patient.publicKey());
+  log(`\n✓ patient holds ${left} USDC — enough for ${Math.floor(Number(left) / 8.6956522)} more runs at €800`);
+  if (Number(left) < 8.6956522) {
+    log(`  Not enough for a run. Top up from the anchor:\n  cd ../anchor && CLINIC_SECRET=$(node -p 'require("../web/.tw-wallets.json").patient') npm run onramp -- 1500`);
+  }
+}
+
 /** Returns a stuck escrow's whole balance to the patient (demo cleanup). */
 async function cmdRefund(contractId?: string): Promise<void> {
   if (!contractId) throw new Error('usage: npm run tw -- refund <contractId>');
@@ -291,6 +317,7 @@ const commands: Record<string, (...a: string[]) => Promise<void>> = {
   wallets: cmdWallets,
   arrival: cmdArrival,
   cancel: cmdCancel,
+  topup: cmdTopup,
   refund: cmdRefund,
   show: cmdShow,
 };

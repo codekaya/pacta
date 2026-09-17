@@ -145,6 +145,11 @@ async function DealRow({ deal, origin }: { deal: Deal; origin: string }) {
         )}
       </div>
       <div className="flex flex-col gap-3 md:col-span-4">
+        {deal.error && (
+          <p className="border-l-2 border-oxblood bg-oxblood/[0.06] px-3 py-2 text-sm leading-relaxed text-oxblood">
+            {deal.error}
+          </p>
+        )}
         {deal.status === 'funded' && (
           <>
             <form action={checkIn.bind(null, deal.id)}>

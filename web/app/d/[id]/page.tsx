@@ -81,12 +81,22 @@ export default async function DealPage({ params, searchParams }: Props) {
   );
 }
 
+function StepError({ deal }: { deal: Deal }) {
+  if (!deal.error) return null;
+  return (
+    <p className="border-l-2 border-oxblood bg-oxblood/[0.06] px-4 py-3 text-sm leading-relaxed text-oxblood">
+      That step did not go through. {deal.error}
+    </p>
+  );
+}
+
 function Actions({ deal, atIso }: { deal: Deal; atIso?: string }) {
   const live = (deal.mode ?? escrowMode()) === 'live';
 
   if (deal.status === 'created') {
     return (
       <section className="flex flex-col gap-3">
+        <StepError deal={deal} />
         <form action={fundDeal.bind(null, deal.id)}>
           <SubmitButton pendingLabel={live ? 'Locking on Stellar…' : 'Holding…'}>
             Pay {formatEur(deal.depositEurCents)}
@@ -104,6 +114,7 @@ function Actions({ deal, atIso }: { deal: Deal; atIso?: string }) {
   if (deal.status === 'funded') {
     return (
       <section className="flex flex-col gap-3">
+        <StepError deal={deal} />
         <p className="border-y border-rule py-4 font-serif text-xl italic tracking-[-0.02em] text-forest">
           Held in escrow.
         </p>
@@ -131,6 +142,7 @@ function Actions({ deal, atIso }: { deal: Deal; atIso?: string }) {
   if (deal.status === 'arrived') {
     return (
       <section className="flex flex-col gap-3">
+        <StepError deal={deal} />
         <p className="border-y border-rule py-4 font-serif text-xl italic tracking-[-0.02em] text-ink">
           {deal.clinic.name} checked you in.
         </p>

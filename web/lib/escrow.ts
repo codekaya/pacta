@@ -6,9 +6,9 @@
  * Aksi halde **simüle**: aynı politika hesabı, zincire gitmeden. Sayfa hangisinin
  * çalıştığını her zaman açıkça söyler.
  */
-import { Horizon, TransactionBuilder, Networks, type Keypair } from '@stellar/stellar-sdk';
+import { Asset, Horizon, TransactionBuilder, Networks, type Keypair } from '@stellar/stellar-sdk';
 import type { Deal, Receipt, Settlement, SettlementReason } from './deals';
-import { formatUsdc } from './money';
+import { formatUsdc, parseUsdc } from './money';
 import {
   arrivalEntitlement,
   clinicCancelEntitlement,
@@ -18,10 +18,11 @@ import {
   type Entitlement,
 } from './policy';
 import { PolicyCommitments, type PtkReason } from './ptk';
-import { TrustlessWork, type SignXdr } from './trustless';
+import { TESTNET_USDC, TrustlessWork, type SignXdr } from './trustless';
 import { demoWallets, type DemoWallets } from './wallets';
 
 const horizon = new Horizon.Server('https://horizon-testnet.stellar.org');
+const USDC = new Asset(TESTNET_USDC.symbol, TESTNET_USDC.address);
 
 /** Testnet escrow scale: the mock anchor caps single transfers, so live demos lock 1:100. */
 const LIVE_SCALE_DIVISOR = 100n;
@@ -61,6 +62,23 @@ async function ledgerNow(): Promise<number> {
   return Math.floor(Date.parse(ledger!.closed_at) / 1000);
 }
 
+/**
+ * Trustless Work answers a short patient wallet with a 400 mid-flow, after the
+ * escrow is already deployed. Checking first keeps a demo from breaking halfway.
+ */
+async function assertFunded(address: string, needed: bigint): Promise<void> {
+  const account = await horizon.loadAccount(address);
+  const line = account.balances.find(
+    (b) => 'asset_code' in b && b.asset_code === USDC.getCode() && b.asset_issuer === USDC.getIssuer(),
+  );
+  const have = line ? parseUsdc(line.balance) : 0n;
+  if (have >= needed) return;
+  throw new Error(
+    `Patient wallet holds ${formatUsdc(have)} USDC, needs ${formatUsdc(needed)}. ` +
+      'Run "npm run tw -- topup" to recycle the demo balances.',
+  );
+}
+
 function receipt(label: string, hash?: string): Receipt {
   return { label, at: now(), ...(hash ? { hash } : {}) };
 }
@@ -97,6 +115,7 @@ export async function lock(deal: Deal): Promise<Deal> {
   const { tw, ptk, w } = await live();
   const parties = { patient: w.patient.publicKey(), clinic: w.clinic.publicKey(), agency: w.agency.publicKey() };
   const amount = deal.escrowAmount / LIVE_SCALE_DIVISOR;
+  await assertFunded(parties.patient, amount);
   const receipts: Receipt[] = [];
 
   const deployed = await tw.deploy(

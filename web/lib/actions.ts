@@ -13,6 +13,23 @@ async function mustGet(id: string): Promise<Deal> {
   return deal;
 }
 
+/**
+ * Runs one escrow step. A live call can fail mid-demo — a short patient wallet,
+ * a slow anchor — and a thrown server action shows a stack trace on stage. The
+ * message lands on the page instead, and the deal stays where it was.
+ */
+async function step(id: string, from: Deal['status'], run: (deal: Deal) => Promise<Deal>): Promise<void> {
+  const deal = await mustGet(id);
+  if (deal.status !== from) return;
+  const { error: _cleared, ...pending } = deal;
+  try {
+    await dealStore.save(await run(pending));
+  } catch (err) {
+    await dealStore.save({ ...pending, error: err instanceof Error ? err.message : String(err) });
+  }
+  refresh(id);
+}
+
 function refresh(id: string) {
   revalidatePath(`/d/${id}`);
   revalidatePath('/clinic');
@@ -20,34 +37,22 @@ function refresh(id: string) {
 
 /** Patient pays. Live: TW deploy → PTK commit → fund. */
 export async function fundDeal(id: string): Promise<void> {
-  const deal = await mustGet(id);
-  if (deal.status !== 'created') return;
-  await dealStore.save(await lock(deal));
-  refresh(id);
+  await step(id, 'created', lock);
 }
 
 /** Clinic front desk checks the patient in. First half of the dual confirmation. */
 export async function checkIn(id: string): Promise<void> {
-  const deal = await mustGet(id);
-  if (deal.status !== 'funded') return;
-  await dealStore.save(await markArrived(deal));
-  refresh(id);
+  await step(id, 'funded', markArrived);
 }
 
 /** Patient confirms from the QR. Second half; Pacta then releases. */
 export async function confirmArrival(id: string): Promise<void> {
-  const deal = await mustGet(id);
-  if (deal.status !== 'arrived') return;
-  await dealStore.save(await release(deal));
-  refresh(id);
+  await step(id, 'arrived', release);
 }
 
 /** Cancellation settled against the committed policy. `atIso` is honoured only in simulated mode. */
 export async function cancelDeal(id: string, reason: 'patient-cancel' | 'clinic-cancel', atIso?: string): Promise<void> {
-  const deal = await mustGet(id);
-  if (deal.status !== 'funded') return;
-  await dealStore.save(await cancel(deal, reason, atIso ? new Date(atIso) : undefined));
-  refresh(id);
+  await step(id, 'funded', (deal) => cancel(deal, reason, atIso ? new Date(atIso) : undefined));
 }
 
 /**
