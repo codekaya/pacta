@@ -1,5 +1,5 @@
 import { Asset, BASE_FEE, Horizon, Keypair, Memo, Operation, TransactionBuilder, type xdr } from '@stellar/stellar-sdk';
-import type { NetworkConfig } from './config.js';
+import type { NetworkConfig } from './config.ts';
 
 /** The on-chain half of a ramp: funding, trustlines, balances, payments. */
 export class Chain {

@@ -1,5 +1,5 @@
-import { request } from './http.js';
-import type { AnchorClient } from './sep.js';
+import { request } from './http.ts';
+import type { AnchorClient } from './sep.ts';
 
 /**
  * Sandbox only: play the Turkish bank. On a real anchor the customer's

@@ -20,7 +20,7 @@ import {
   simulateBankTransfer,
   type AnchorSession,
   type Sep6Transaction,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 const ENV_FILE = new URL('../.env', import.meta.url);
 const WALLET_FILE = new URL('../.wallet.json', import.meta.url);

@@ -1,7 +1,28 @@
 import type { Parties, Policy } from './policy';
 import { parseUsdc } from './money';
 
-export type DealStatus = 'created' | 'funded' | 'released' | 'refunded';
+/** created → funded → arrived (klinik işaretledi) → released; funded → refunded. */
+export type DealStatus = 'created' | 'funded' | 'arrived' | 'released' | 'refunded';
+
+/** Zincirde iz bırakan her adım — sayfada explorer linki olarak gösterilir. */
+export type Receipt = {
+  label: string;
+  at: number;
+  /** Stellar işlem hash'i, varsa. */
+  hash?: string;
+};
+
+/** Kliniğin anchor üzerinden TL çekimi. */
+export type Withdrawal = {
+  id: string;
+  at: number;
+  usdc: string;
+  tl: string;
+  rate: string;
+  stellarTx?: string;
+  bankRef?: string;
+  status: string;
+};
 
 export type SettlementReason = 'patient-cancel' | 'clinic-cancel' | 'arrival';
 
@@ -40,9 +61,18 @@ export type Deal = {
   policy: Policy;
   parties: Parties;
   status: DealStatus;
+  /** `live`: gerçek TW escrow + PTK; `simulated`: yalnızca durum geçişi. Fonlanınca belirlenir. */
+  mode?: 'live' | 'simulated';
   /** Trustless Work escrow kontrat adresi; anlaşma fonlanınca dolar. */
   escrowContractId?: string;
+  /** Canlı modda escrow'a gerçekten kilitlenen tutar (testnet ölçeği), taban birim. */
+  lockedAmount?: bigint;
+  /** PTK'daki anlaşma kimliği (hex). */
+  policyDealId?: string;
   fundedAt?: number;
+  /** Kliniğin "hasta geldi" işareti. */
+  arrivedAt?: number;
+  receipts?: Receipt[];
   settlement?: Settlement;
   createdAt: number;
 };
@@ -96,7 +126,7 @@ const DEMO_DEAL: Deal = {
 };
 
 /** Survives HMR. Bump SEED when demo fixture copy changes. */
-const SEED = 3;
+const SEED = 4;
 const globalForDeals = globalThis as typeof globalThis & {
   __pactaDeals?: Map<string, Deal>;
   __pactaSeed?: number;
@@ -124,3 +154,19 @@ export const dealStore: DealStore = {
 };
 
 export const DEMO_DEAL_ID = DEMO_DEAL.id;
+
+/** Demo fikstürünün ilk hali — sıfırlarken tarih ve taraflar buradan türetilir. */
+export function demoDealTemplate(): Deal {
+  return { ...DEMO_DEAL, policy: { ...DEMO_DEAL.policy }, parties: { ...DEMO_DEAL.parties } };
+}
+
+const globalForWithdrawals = globalThis as typeof globalThis & { __pactaWithdrawals?: Withdrawal[] };
+
+export const withdrawalStore = {
+  async list(): Promise<Withdrawal[]> {
+    return [...(globalForWithdrawals.__pactaWithdrawals ?? [])].sort((a, b) => b.at - a.at);
+  },
+  async add(w: Withdrawal): Promise<void> {
+    (globalForWithdrawals.__pactaWithdrawals ??= []).push(w);
+  },
+};

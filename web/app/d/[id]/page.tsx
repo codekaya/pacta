@@ -4,7 +4,9 @@ import { ClinicCard } from '@/components/ClinicCard';
 import { Frame, Wordmark } from '@/components/Frame';
 import { PolicyTable } from '@/components/PolicyTable';
 import { SubmitButton } from '@/components/SubmitButton';
-import { fundDeal, resetDeal, settleCancellation } from '@/lib/actions';
+import { cancelDeal, confirmArrival, fundDeal, resetDeal } from '@/lib/actions';
+import { Receipts } from '@/components/Receipts';
+import { escrowMode, LIVE_SCALE } from '@/lib/escrow';
 import { dealStore, type Deal } from '@/lib/deals';
 import { formatDate, formatDateLong, formatEur, formatUsdcDisplay, parseUsdc } from '@/lib/money';
 import { applyBps, entitlement, DAY_SECONDS } from '@/lib/policy';
@@ -53,7 +55,8 @@ export default async function DealPage({ params, searchParams }: Props) {
                 {formatEur(deal.depositEurCents)}
               </p>
               <p className="mt-2 font-mono text-[11px] text-muted">
-                {formatUsdcDisplay(deal.escrowAmount)} USDC in escrow
+                {formatUsdcDisplay(deal.lockedAmount ?? deal.escrowAmount)} USDC in escrow
+                {deal.lockedAmount !== undefined && ` · testnet 1:${LIVE_SCALE}`}
               </p>
 
               {deal.status === 'created' && (
@@ -79,18 +82,21 @@ export default async function DealPage({ params, searchParams }: Props) {
 }
 
 function Actions({ deal, atIso }: { deal: Deal; atIso?: string }) {
+  const live = (deal.mode ?? escrowMode()) === 'live';
+
   if (deal.status === 'created') {
     return (
       <section className="flex flex-col gap-3">
         <form action={fundDeal.bind(null, deal.id)}>
-          <SubmitButton pendingLabel="Holding…">
+          <SubmitButton pendingLabel={live ? 'Locking on Stellar…' : 'Holding…'}>
             Pay {formatEur(deal.depositEurCents)}
           </SubmitButton>
         </form>
         <p className="text-sm leading-relaxed text-muted">
-          Pacta does not take custody. The deposit is locked in a Trustless Work escrow until you
-          confirm arrival. Cancel and the schedule above is what settles.
+          Pacta does not take custody. The deposit is locked in a Trustless Work escrow and the
+          schedule above is written to a policy contract before the money moves.
         </p>
+        <ModeNote live={live} />
       </section>
     );
   }
@@ -102,37 +108,70 @@ function Actions({ deal, atIso }: { deal: Deal; atIso?: string }) {
           Held in escrow.
         </p>
         <p className="text-sm leading-relaxed text-muted">
-          The clinic can see the amount. It cannot spend it.
-          {deal.escrowContractId ? (
+          The clinic can see the amount. It cannot spend it. When you arrive, the front desk checks
+          you in and you confirm here.
+          {deal.escrowContractId && (
             <>
               {' '}
-              Contract{' '}
-              <a
-                className="font-mono text-ink underline decoration-rule underline-offset-4 hover:decoration-oxblood focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-                href={`https://stellar.expert/explorer/testnet/contract/${deal.escrowContractId}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {deal.escrowContractId.slice(0, 8)}…
-              </a>
+              Contract <ExplorerLink path={`contract/${deal.escrowContractId}`} text={`${deal.escrowContractId.slice(0, 8)}…`} />
             </>
-          ) : (
-            ' Escrow wiring is not live yet — this step is simulated.'
           )}
         </p>
-        <form action={settleCancellation.bind(null, deal.id, 'arrival', atIso)}>
-          <SubmitButton pendingLabel="Releasing…">I have arrived</SubmitButton>
-        </form>
-        <form action={settleCancellation.bind(null, deal.id, 'patient-cancel', atIso)}>
+        <form action={cancelDeal.bind(null, deal.id, 'patient-cancel', live ? undefined : atIso)}>
           <SubmitButton pendingLabel="Settling…" variant="ghost">
             Cancel this booking
           </SubmitButton>
         </form>
+        <ModeNote live={live} />
+        <Receipts receipts={deal.receipts} />
+      </section>
+    );
+  }
+
+  if (deal.status === 'arrived') {
+    return (
+      <section className="flex flex-col gap-3">
+        <p className="border-y border-rule py-4 font-serif text-xl italic tracking-[-0.02em] text-ink">
+          {deal.clinic.name} checked you in.
+        </p>
+        <p className="text-sm leading-relaxed text-muted">
+          Confirm you are at the clinic. The deposit is then released under the schedule you paid
+          against — no refund applies on arrival.
+        </p>
+        <form action={confirmArrival.bind(null, deal.id)}>
+          <SubmitButton pendingLabel={live ? 'Releasing on Stellar…' : 'Releasing…'}>
+            I am at the clinic
+          </SubmitButton>
+        </form>
+        <Receipts receipts={deal.receipts} />
       </section>
     );
   }
 
   return <SettlementPanel deal={deal} />;
+}
+
+function ModeNote({ live }: { live: boolean }) {
+  return (
+    <p className="font-mono text-[11px] leading-relaxed text-muted">
+      {live
+        ? `Live on Stellar testnet. Demo keys sign for each party; escrow runs at 1:${LIVE_SCALE}.`
+        : 'Simulated. Set TW_API_KEY to lock this on Stellar testnet.'}
+    </p>
+  );
+}
+
+function ExplorerLink({ path, text }: { path: string; text: string }) {
+  return (
+    <a
+      className="font-mono text-ink underline decoration-rule underline-offset-4 hover:decoration-oxblood focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+      href={`https://stellar.expert/explorer/testnet/${path}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      {text}
+    </a>
+  );
 }
 
 function SettlementPanel({ deal }: { deal: Deal }) {
@@ -172,20 +211,28 @@ function SettlementPanel({ deal }: { deal: Deal }) {
       </ul>
       <p className="mt-4 text-sm leading-relaxed text-muted">
         Amounts come from the schedule written before payment. They sum to the escrow balance.
+        {!refunded && deal.parties.agency && ' The escrow pays the clinic; the agency share is owed by the clinic.'}
       </p>
+      <Receipts receipts={deal.receipts} />
     </section>
   );
 }
 
 function DemoControls({ deal }: { deal: Deal }) {
-  const jumps = [20, 10, 3].map((days) => ({
-    days,
-    iso: new Date((deal.policy.procedureDate - days * DAY_SECONDS) * 1000).toISOString(),
-  }));
+  // Live settlements use ledger time, so previewing another date would mislead.
+  const live = (deal.mode ?? escrowMode()) === 'live';
+  const jumps = live
+    ? []
+    : [20, 10, 3].map((days) => ({
+        days,
+        iso: new Date((deal.policy.procedureDate - days * DAY_SECONDS) * 1000).toISOString(),
+      }));
 
   return (
     <footer className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-rule py-6 text-sm">
-      <span className="font-mono text-[11px] tracking-[0.14em] text-muted uppercase">Preview as of</span>
+      {jumps.length > 0 && (
+        <span className="font-mono text-[11px] tracking-[0.14em] text-muted uppercase">Preview as of</span>
+      )}
       {jumps.map(({ days, iso }) => (
         <Link
           key={days}
@@ -195,20 +242,31 @@ function DemoControls({ deal }: { deal: Deal }) {
           {days} days out
         </Link>
       ))}
+      {jumps.length > 0 && (
+        <Link
+          href={`/d/${deal.id}`}
+          className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+        >
+          Today
+        </Link>
+      )}
+      <span className="ml-auto font-mono text-[11px] tracking-[0.14em] text-muted uppercase">Restart, procedure in</span>
+      {[20, 10, 3].map((days) => (
+        <form key={days} action={resetDeal.bind(null, deal.id, days)}>
+          <button
+            type="submit"
+            className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+          >
+            {days}d
+          </button>
+        </form>
+      ))}
       <Link
-        href={`/d/${deal.id}`}
+        href="/clinic"
         className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
       >
-        Today
+        Clinic desk →
       </Link>
-      <form action={resetDeal.bind(null, deal.id)} className="ml-auto">
-        <button
-          type="submit"
-          className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-        >
-          Reset
-        </button>
-      </form>
     </footer>
   );
 }

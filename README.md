@@ -1,107 +1,114 @@
-# x402 `upto` for Stellar
+# Pacta
 
-A Soroban contract and scheme specification that let AI agents pay for metered
-services on Stellar with an enforced spending cap.
+Health-tourism deposits held in escrow until the patient walks into the clinic.
+The cancellation schedule is committed on-chain before the patient pays, and the
+clinic cashes out in Turkish lira.
 
-The `exact` x402 scheme covers payments whose price is known up front. Metered
-services break that assumption: an agent calling an inference endpoint knows its
-budget, not its bill. The `upto` scheme closes the gap — authorize a ceiling,
-settle the actual usage, refund the difference. It has EVM and SVM
-specifications; this repository supplies the Stellar one.
+A patient abroad books six implants in Istanbul and is asked for an €800 deposit
+by bank transfer. If they cancel, the refund depends on the clinic's goodwill.
+With Pacta:
 
-- **Spec draft:** [`specs/scheme_upto_stellar.md`](specs/scheme_upto_stellar.md)
-- **Reference implementation:** [`contracts/upto`](contracts/upto)
+1. The patient pays and the deposit is locked in a **Trustless Work** escrow.
+2. The refund tiers they saw (14+ days: 100%, 7–14: 50%, <7: 0%) are written to
+   the **Pacta Policy Commitment Contract**, bound to that escrow.
+3. At the clinic, the front desk checks them in and the patient confirms from a
+   QR. The escrow releases.
+4. The clinic withdraws USDC to TRY through a SEP-6 **anchor**, at a locked rate.
 
-## Why a contract is needed
+If the patient cancels instead, Pacta records the split the contract computes and
+pays exactly that out of the escrow.
 
-SEP-41 allowances cannot express `upto` safely:
+## Architecture
 
-| Requirement | With a bare SEP-41 allowance |
+```mermaid
+flowchart LR
+  P[Patient] -- pays --> TW[(Trustless Work<br/>single-release escrow)]
+  Pacta -- commit terms --> PTK[(Pacta Policy<br/>Commitment Contract)]
+  TW -. contract id .-> PTK
+  C[Clinic] -- check-in --> TW
+  P -- confirm arrival --> TW
+  Pacta -- settle: record split --> PTK
+  Pacta -- release / resolve-dispute --> TW
+  TW -- USDC --> C
+  C -- SEP-10/12/38/6 --> A[TRY anchor]
+  A -- FAST transfer --> Bank[Clinic IBAN]
+```
+
+| Role in Trustless Work | Who | Why |
+|---|---|---|
+| `approver` | Patient | Confirms arrival |
+| `serviceProvider` | Clinic | Checks the patient in |
+| `releaseSigner`, `platformAddress` | Pacta release key | Releases on dual confirmation; opens cancellations so the patient signs nothing |
+| `disputeResolver` | Pacta resolver key (separate) | Pays out cancellations |
+| `receiver` | Clinic | |
+
+### Why a policy contract on top of Trustless Work
+
+Trustless Work has no time trigger: every refund is a distribution list the
+dispute resolver chooses. Pacta is that resolver, so escrow alone would make the
+refund Pacta's decision. The policy contract closes that gap as far as composition
+allows:
+
+- **Immutable terms.** One policy per escrow, committed before funding.
+- **Public arithmetic.** `distribute(deal, reason, at, balance)` returns the exact
+  `resolve-dispute` list — positive amounts, summing to the live balance.
+- **A recorded promise.** `settle` stores and emits the split once, before
+  Pacta signs the payout. It rejects times before commitment or after the
+  current ledger, so a cancellation cannot be moved into a cheaper tier.
+
+This makes a deviation **provable**, not impossible. We say that plainly.
+
+## Repository
+
+| Path | What |
 |---|---|
-| Funds reach only the agreed recipient | An allowance names a *spender*, not a destination — the spender can send anywhere |
-| One authorization settles exactly once | An allowance stays drainable up to its limit until explicitly reduced |
-| Payer and server provably agreed on terms | An allowance carries no commitment to what was purchased |
+| [`contracts/policy`](contracts/policy) | Policy Commitment Contract (Soroban). 19 tests, incl. a parity vector shared with the TS policy |
+| [`web`](web) | Next.js: patient deposit notice, clinic desk, escrow service, Trustless Work + contract clients |
+| [`web/lib/policy.ts`](web/lib/policy.ts) | The same policy math in TypeScript; must agree with the contract to the stroop |
+| [`anchor`](anchor) | SEP-1/10/12/38/6 client for the USDC ⇄ TRY leg, used by the clinic desk and a CLI |
+| [`contracts/upto`](contracts/upto) | x402 `upto` scheme for Stellar — the id derivation Pacta's policy contract inherits |
+| [`docs`](docs) | Spec, PRD, competitor map, hackathon strategy |
 
-The contract supplies all three: recipient binding, single settlement, and
-replay protection, on top of any SEP-41 token.
+## Testnet
 
-## Two settlement paths
+| | |
+|---|---|
+| Policy Commitment Contract | [`CBH76LP7DYOMVUKXFKLQGDLLDVIFK6LM7S24BNQQMZ774EIR57TTP7V2`](https://stellar.expert/explorer/testnet/contract/CBH76LP7DYOMVUKXFKLQGDLLDVIFK6LM7S24BNQQMZ774EIR57TTP7V2) |
+| Escrow | Trustless Work single-release, deployed per deal |
+| Asset | USDC `GBBD47IF…LLFLA5` — the same issuer the anchor settles in |
+| Anchor | `tr-mock-anchor.fly.dev` (SEP-6, TRY). Only the bank rail is simulated |
 
-Both share one payload type and one id derivation.
-
-**One-shot** — the HTTP flow. The payer signs the payload offline, it travels in
-the `X-PAYMENT` header, and a facilitator submits the only transaction. Escrow
-and payout happen atomically, leaving no contract balance behind.
-
-```
-settle_signed(authorization, settled)
-```
-
-The payer's signature covers the payload but deliberately **not** the settled
-amount, which is what keeps one signature valid for any outcome within the cap.
-`contracts/upto/src/test.rs` pins that shape down, since the spec depends on it.
-
-**Session** — escrow now, settle later. Suits an agent making many metered calls
-against one budget.
-
-```
-lock(authorization) -> id     # payer escrows the cap
-settle(id, settled)           # settler pays out and refunds the remainder
-reclaim(id)                   # permissionless, after the window closes
-```
-
-`reclaim` is permissionless on purpose: the funds can only go back to the payer,
-so the payer never depends on a cooperative counterparty to recover a cap.
-
-## Layout
-
-```
-contracts/upto/src/
-  lib.rs       contract entry points and payload validation
-  types.rs     UptoAuthorization, Lock, Settlement
-  error.rs     contract error codes
-  storage.rs   replay markers (temporary) and escrows (persistent), with TTLs
-  events.rs    Locked / Settled / Reclaimed
-  test.rs      27 tests: settlement paths, validation, authorization binding
-specs/
-  scheme_upto_stellar.md   the scheme draft intended for upstream
-```
-
-## Getting started
-
-Requires Rust 1.85+ and the `wasm32v1-none` target. The Stellar CLI is only
-needed for deployment.
+## Run it
 
 ```bash
-rustup target add wasm32v1-none
-make test      # 27 tests in the Soroban host emulator, no network needed
-make build     # release wasm, ~26 KB
-make check     # fmt + clippy -D warnings + tests
+make test                        # contracts
+cd web && npm install && npm test
+
+npm run tw -- wallets            # testnet keys for patient, clinic, agency, Pacta ×2
+npm run dev                      # http://localhost:3000 and /clinic
 ```
 
-### Deploying to testnet
-
-`make deploy` expects a configured identity. The contract takes no constructor
-arguments and has no admin — it is permissionless infrastructure, so one
-deployment per network is enough.
+Without `TW_API_KEY` the site runs the same policy math with simulated escrow and
+says so on the page. With it (in `web/.env.local`, from
+[dapp.trustlesswork.com](https://dapp.trustlesswork.com)), every step is a
+testnet transaction and each one links to the explorer. Live escrows run at 1:100
+because the sandbox anchor caps single transfers.
 
 ```bash
-stellar keys generate --global deployer --network testnet --fund
-make deploy NETWORK=testnet SOURCE=deployer
+npm run tw -- arrival 10         # CLI: deploy → commit → fund → check-in → confirm → settle → release
+npm run tw -- cancel 10 10       # CLI: … → dispute → settle → resolve, procedure 10 days out
+cd ../anchor && npm run demo     # TRY → USDC → TRY through the anchor
 ```
 
-> The `optimize` and `deploy` targets need stellar-cli 23 or newer, because
-> earlier versions do not know the `wasm32v1-none` target. `make test` and
-> `make build` work with any version, since they go through cargo directly.
+## Honest scope
 
-## Status
-
-The contract and its test suite are complete and green; the spec is a draft
-written for upstream review, and its open questions are listed at the end of
-that document. Not yet deployed, not yet audited, and the facilitator and
-`@x402/stellar` integration are the next pieces of work.
+| Real | Simulated or out of scope |
+|---|---|
+| Escrow custody (Trustless Work), policy contract, USDC movement, anchor quotes, SEP-6 withdrawals | The anchor's bank rail; EUR → USDC for the patient |
+| Clinic licence number shown on the notice | Live Ministry of Health registry lookup — static list |
+| Agency share recorded on-chain | Agency paid by the clinic after release (split contract is next) |
+| — | Demo keys sign for every role server-side; the product uses an embedded wallet for patients |
 
 ## License
 
-Apache-2.0, matching `@x402/stellar` so the spec and reference implementation
-can be contributed upstream without a licence conflict.
+Apache-2.0

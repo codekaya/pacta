@@ -1,6 +1,6 @@
 import { Asset, Keypair, StellarToml, TransactionBuilder, WebAuth } from '@stellar/stellar-sdk';
-import type { AnchorConfig } from './config.js';
-import { request, withQuery } from './http.js';
+import type { AnchorConfig } from './config.ts';
+import { request, withQuery } from './http.ts';
 
 // ---------------------------------------------------------------- SEP-1
 
