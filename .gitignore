@@ -1,0 +1,14 @@
+/target
+**/*.rs.bk
+*.wasm
+.stellar/
+.soroban/
+.env
+.env.local
+.DS_Store
+node_modules/
+
+# next
+.next/
+next-env.d.ts
+*.tsbuildinfo

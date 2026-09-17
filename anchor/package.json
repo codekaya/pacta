@@ -1,0 +1,28 @@
+{
+  "name": "@pacta/anchor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pacta klinik off-ramp'i: SEP-1/10/12/38/6 ile USDC ⇄ TRY anchor istemcisi",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "wallet": "tsx scripts/cli.ts wallet",
+    "quote": "tsx scripts/cli.ts quote",
+    "onramp": "tsx scripts/cli.ts onramp",
+    "offramp": "tsx scripts/cli.ts offramp",
+    "history": "tsx scripts/cli.ts history",
+    "demo": "tsx scripts/cli.ts demo",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

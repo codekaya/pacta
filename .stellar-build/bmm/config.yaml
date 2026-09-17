@@ -1,0 +1,8 @@
+project_name: Pacta
+planning_artifacts: docs
+implementation_artifacts: docs/stories
+project_knowledge: docs
+user_name: Kaya
+communication_language: Turkish
+document_output_language: Turkish
+user_skill_level: intermediate
