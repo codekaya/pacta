@@ -1,0 +1,296 @@
+<title>Pacta Money Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #16120f;
+    --surface: #211b17;
+    --surface-2: #2a231e;
+    --line: #3d332c;
+    --text: #f1eae0;
+    --muted: #ab9f90;
+    --usdc: #dba84a;
+    --policy: #86bba0;
+    --fiat: #de8a75;
+    --signal: #c9bdac;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ground); color: var(--text); }
+  body { font: 15px/1.55 "Public Sans", "Helvetica Neue", Arial, sans-serif; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 40px 28px 56px; }
+  header { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; }
+  .eyebrow { font: 500 11px/1 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h1 { font: 400 clamp(32px, 4.4vw, 52px)/1.04 Newsreader, Georgia, serif; letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+  h1 i { color: var(--usdc); }
+  .lede { color: var(--muted); max-width: 62ch; margin: 14px 0 0; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  button { font: 500 13px/1 "IBM Plex Mono", ui-monospace, monospace; color: var(--text); background: transparent; border: 1px solid var(--line); padding: 11px 14px; cursor: pointer; border-radius: 2px; }
+  button:hover { border-color: var(--muted); }
+  button[aria-pressed="true"] { background: var(--text); color: var(--ground); border-color: var(--text); }
+  button:focus-visible { outline: 2px solid var(--usdc); outline-offset: 2px; }
+
+  .stage { margin-top: 28px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; }
+  @media (max-width: 980px) { .stage { grid-template-columns: 1fr; } header { grid-template-columns: 1fr; } .controls { justify-content: flex-start; } }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); overflow-x: auto; }
+  svg { display: block; width: 100%; min-width: 760px; height: auto; }
+  figcaption { padding: 12px 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+  .node rect { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.2; }
+  .node .t { font: 500 17px Newsreader, Georgia, serif; fill: var(--text); }
+  .node .s { font: 400 11px "IBM Plex Mono", ui-monospace, monospace; fill: var(--muted); }
+  .node.key rect { stroke: #5a4c40; }
+  .zone { fill: none; stroke: var(--line); stroke-dasharray: 3 5; }
+  .zone-label { font: 500 10.5px "IBM Plex Mono", monospace; letter-spacing: .14em; fill: var(--muted); }
+  .edge { fill: none; stroke-width: 1.6; opacity: .38; transition: opacity .35s, stroke-width .35s; }
+  .edge.usdc { stroke: var(--usdc); } .edge.policy { stroke: var(--policy); } .edge.fiat { stroke: var(--fiat); }
+  .edge.signal { stroke: var(--signal); stroke-dasharray: 5 5; }
+  .edge.on { opacity: 1; stroke-width: 2.6; }
+  .elabel { font: 400 11px "IBM Plex Mono", monospace; fill: var(--muted); transition: fill .35s; }
+  .elabel.on { fill: var(--text); }
+  .dot { filter: url(#glow); }
+
+  ol.steps { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); }
+  .steps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 13px 16px; border-top: 1px solid var(--line); color: var(--muted); transition: color .3s, background .3s; }
+  .steps li:first-child { border-top: 0; }
+  .steps li.on { color: var(--text); background: var(--surface-2); }
+  .steps .n { font: 500 12px/1.6 "IBM Plex Mono", monospace; color: var(--muted); }
+  .steps li.on .n { color: var(--usdc); }
+  .steps b { font-weight: 600; }
+  .steps .who { display: block; font: 400 11px/1.5 "IBM Plex Mono", monospace; letter-spacing: .04em; margin-top: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 14px 0 0; padding: 0; list-style: none; font: 400 12px "IBM Plex Mono", monospace; color: var(--muted); }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 8px; }
+
+  .proof { margin-top: 28px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); }
+  @media (max-width: 860px) { .proof { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .proof div { padding: 18px 18px 20px; border-left: 1px solid var(--line); }
+  .proof div:first-child { border-left: 0; }
+  .proof .v { font: 400 34px/1 Newsreader, Georgia, serif; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .proof .k { margin-top: 8px; color: var(--muted); font-size: 13px; }
+  .note { margin-top: 18px; color: var(--muted); font-size: 13px; max-width: 80ch; }
+  .note code, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--text); }
+  @media (prefers-reduced-motion: reduce) { .edge, .elabel, .steps li { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Pacta · architecture · Stellar testnet</p>
+      <h1>Trustless Work holds the money. <i>Our contract holds the promise.</i></h1>
+      <p class="lede">An €800 clinic deposit, followed through every hop. Pick a path; each lit edge is a real testnet transaction in the running demo.</p>
+    </div>
+    <div class="controls" role="group" aria-label="Choose a path">
+      <button type="button" data-scenario="arrival" aria-pressed="true">Patient arrives</button>
+      <button type="button" data-scenario="cancel" aria-pressed="false">Cancels 10 days out</button>
+      <button type="button" id="play" aria-pressed="false">Pause</button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <figure>
+      <svg viewBox="0 0 1200 680" role="img" aria-label="Patient funds a Trustless Work escrow; Pacta commits the cancellation policy to its own contract; on arrival the escrow releases to the clinic, which withdraws to Turkish lira through a SEP-6 anchor; on cancellation Pacta records the contract's split and resolves the escrow to patient, clinic and agency.">
+        <defs>
+          <filter id="glow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="3.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 1 L9 5 L0 9" fill="none" stroke="#ab9f90" stroke-width="1.4"/>
+          </marker>
+        </defs>
+
+        <!-- zones -->
+        <rect class="zone" x="392" y="58" width="416" height="534"/>
+        <text class="zone-label" x="408" y="82">STELLAR · SOROBAN</text>
+        <text class="zone-label" x="40" y="82">EUROPE</text>
+        <text class="zone-label" x="940" y="82">TÜRKİYE</text>
+
+        <!-- edges (drawn under nodes) -->
+        <path id="e-fund" class="edge usdc" d="M260 150 L440 150" marker-end="url(#ah)"/>
+        <path id="e-confirm" class="edge signal" d="M260 196 L440 196" marker-end="url(#ah)"/>
+        <path id="e-refund" class="edge usdc" d="M520 110 C 520 40, 160 40, 160 118" marker-end="url(#ah)"/>
+        <path id="e-commit" class="edge policy" d="M260 462 L440 462" marker-end="url(#ah)"/>
+        <path id="e-settle" class="edge policy" d="M260 516 L440 516" marker-end="url(#ah)"/>
+        <path id="e-control" class="edge signal" d="M210 440 C 210 330, 470 320, 480 232" marker-end="url(#ah)"/>
+        <path id="e-bind" class="edge policy" d="M680 420 L680 232" marker-end="url(#ah)" stroke-dasharray="2 4"/>
+        <path id="e-checkin" class="edge signal" d="M940 146 L762 146" marker-end="url(#ah)"/>
+        <path id="e-payclinic" class="edge usdc" d="M760 196 L938 196" marker-end="url(#ah)"/>
+        <path id="e-payagency" class="edge usdc" d="M760 214 C 850 214, 850 320, 938 320" marker-end="url(#ah)"/>
+        <path id="e-offramp" class="edge usdc" d="M1140 172 L1176 172 L1176 488 L1142 488" marker-end="url(#ah)"/>
+        <path id="e-fiat" class="edge fiat" d="M1040 536 L1040 588" marker-end="url(#ah)"/>
+
+        <!-- edge labels -->
+        <text class="elabel" data-edge="e-fund" x="276" y="140">fund · USDC</text>
+        <text class="elabel" data-edge="e-confirm" x="276" y="216">confirm arrival</text>
+        <text class="elabel" data-edge="e-refund" x="286" y="58">refund, per policy</text>
+        <text class="elabel" data-edge="e-commit" x="276" y="452">commit terms</text>
+        <text class="elabel" data-edge="e-settle" x="276" y="536">settle · record split</text>
+        <text class="elabel" data-edge="e-control" x="232" y="352">release · dispute · resolve</text>
+        <text class="elabel" data-edge="e-bind" x="692" y="330">bound to escrow id</text>
+        <text class="elabel" data-edge="e-checkin" x="790" y="136">check-in</text>
+        <text class="elabel" data-edge="e-payclinic" x="790" y="186">released</text>
+        <text class="elabel" data-edge="e-payagency" x="862" y="262">agency share</text>
+        <text class="elabel" data-edge="e-offramp" x="1060" y="400" text-anchor="end">withdraw</text>
+        <text class="elabel" data-edge="e-fiat" x="1052" y="568">TRY · FAST</text>
+
+        <!-- nodes -->
+        <g class="node"><rect x="60" y="118" width="200" height="100"/>
+          <text class="t" x="80" y="152">Patient</text>
+          <text class="s" x="80" y="176">approver</text>
+          <text class="s" x="80" y="194">pays €800 deposit</text></g>
+
+        <g class="node key"><rect x="60" y="440" width="200" height="100"/>
+          <text class="t" x="80" y="474">Pacta</text>
+          <text class="s" x="80" y="498">release key</text>
+          <text class="s" x="80" y="516">resolver key (separate)</text></g>
+
+        <g class="node"><rect x="440" y="110" width="320" height="122"/>
+          <text class="t" x="462" y="146">Trustless Work escrow</text>
+          <text class="s" x="462" y="172">single-release · holds USDC</text>
+          <text class="s" x="462" y="190">no time trigger: refunds are</text>
+          <text class="s" x="462" y="208">whatever the resolver signs</text></g>
+
+        <g class="node"><rect x="440" y="420" width="320" height="122"/>
+          <text class="t" x="462" y="456">Policy Commitment Contract</text>
+          <text class="s" x="462" y="482">CBH76…P7V2 · no funds</text>
+          <text class="s" x="462" y="500">commit · distribute · settle</text>
+          <text class="s" x="462" y="518">one policy per escrow, immutable</text></g>
+
+        <g class="node"><rect x="940" y="118" width="200" height="100"/>
+          <text class="t" x="960" y="152">Clinic</text>
+          <text class="s" x="960" y="176">serviceProvider · receiver</text>
+          <text class="s" x="960" y="194">Istanbul</text></g>
+
+        <g class="node"><rect x="940" y="282" width="200" height="76"/>
+          <text class="t" x="960" y="314">Agency</text>
+          <text class="s" x="960" y="338">10% of what is retained</text></g>
+
+        <g class="node"><rect x="940" y="440" width="200" height="96"/>
+          <text class="t" x="960" y="474">TRY anchor</text>
+          <text class="s" x="960" y="498">SEP-10 · 12 · 38 · 6</text>
+          <text class="s" x="960" y="516">rate locked by quote</text></g>
+
+        <g class="node"><rect x="940" y="590" width="200" height="64"/>
+          <text class="t" x="960" y="620">Clinic IBAN</text>
+          <text class="s" x="960" y="642">lira, by bank transfer</text></g>
+
+        <g id="dots"></g>
+      </svg>
+      <figcaption>Brass: USDC moves. Sage: policy written or read. Rose: lira leaves the chain. Dashed grey: a signature that changes escrow state without moving money.</figcaption>
+    </figure>
+
+    <aside>
+      <ol class="steps" id="steps" aria-live="polite"></ol>
+      <ul class="legend" aria-hidden="true">
+        <li><i style="color:var(--usdc)"></i>USDC</li>
+        <li><i style="color:var(--policy)"></i>policy</li>
+        <li><i style="color:var(--fiat)"></i>TRY</li>
+      </ul>
+    </aside>
+  </div>
+
+  <section class="proof" aria-label="Verified on Stellar testnet, 17 September 2026">
+    <div><div class="v">7</div><div class="k">transactions on the arrival path, from payment to release</div></div>
+    <div><div class="v">6</div><div class="k">on a 10-days-out cancellation: 50% back, split to the stroop</div></div>
+    <div><div class="v">242.15 TL</div><div class="k">paid out by the anchor for 5 USDC, completed via SEP-6</div></div>
+    <div><div class="v">0.3%</div><div class="k">Trustless Work fee per payout, measured, disclosed on the notice</div></div>
+  </section>
+  <p class="note">Why two contracts: Trustless Work cannot express “refund depends on the date”, so a refund is a list the dispute resolver signs. Pacta is that resolver. Before it signs, it calls <code>settle</code> on the policy contract, which computes the split from terms committed before payment and refuses back-dated or future times. A deviation becomes <em>provable</em>, not impossible. Policy contract <span class="mono">CBH76LP7DYOMVUKXFKLQGDLLDVIFK6LM7S24BNQQMZ774EIR57TTP7V2</span>.</p>
+</div>
+
+<script>
+(() => {
+  const SCENARIOS = {
+    arrival: [
+      { edges: ['e-commit', 'e-bind'], dot: 'policy', t: 'Terms committed', who: 'Pacta → policy contract', d: '14+ days 100% · 7–14 days 50% · under 7 days 0%.' },
+      { edges: ['e-fund'], dot: 'usdc', t: 'Deposit locked', who: 'Patient → escrow', d: 'The clinic can see it. It cannot spend it.' },
+      { edges: ['e-checkin'], dot: 'signal', t: 'Front desk checks in', who: 'Clinic → escrow milestone', d: 'First half of the dual confirmation.' },
+      { edges: ['e-confirm'], dot: 'signal', t: 'Patient confirms by QR', who: 'Patient → escrow approval', d: 'Second half. No refund applies on arrival.' },
+      { edges: ['e-settle'], dot: 'policy', t: 'Split recorded', who: 'Pacta → policy contract', d: 'Clinic 90%, agency 10%, written before release.' },
+      { edges: ['e-control', 'e-payclinic'], dot: 'usdc', t: 'Escrow released', who: 'Pacta release key → clinic', d: 'USDC lands in the clinic wallet.' },
+      { edges: ['e-offramp', 'e-fiat'], dot: 'fiat', t: 'Withdrawn to lira', who: 'Clinic → anchor → IBAN', d: 'SEP-38 quote locks the rate, SEP-6 pays out.' },
+    ],
+    cancel: [
+      { edges: ['e-commit', 'e-bind'], dot: 'policy', t: 'Terms committed', who: 'Pacta → policy contract', d: 'Same schedule the patient read before paying.' },
+      { edges: ['e-fund'], dot: 'usdc', t: 'Deposit locked', who: 'Patient → escrow', d: 'Procedure is ten days away.' },
+      { edges: ['e-control'], dot: 'signal', t: 'Cancellation opened', who: 'Pacta release key → escrow', d: 'The release signer may dispute, so the patient signs nothing.' },
+      { edges: ['e-settle'], dot: 'policy', t: 'Contract computes the split', who: 'Pacta → policy contract', d: 'Ledger time only: 50% tier. Recorded once, emitted as an event.' },
+      { edges: ['e-control', 'e-refund', 'e-payclinic', 'e-payagency'], dot: 'usdc', t: 'Escrow pays out', who: 'Pacta resolver key → three parties', d: 'Patient 50%, clinic 45%, agency 5%. Sums to the balance exactly.' },
+    ],
+  };
+  const COLORS = { usdc: '#dba84a', policy: '#86bba0', fiat: '#de8a75', signal: '#e9e0d3' };
+  const STEP_MS = 2300;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const dots = document.getElementById('dots');
+  const list = document.getElementById('steps');
+  const playBtn = document.getElementById('play');
+  let scenario = 'arrival', index = 0, playing = !reduce, timer = null, raf = null;
+
+  function renderList() {
+    list.innerHTML = '';
+    SCENARIOS[scenario].forEach((s, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="n">${i + 1}</span><span><b>${s.t}</b> — ${s.d}<span class="who">${s.who}</span></span>`;
+      li.addEventListener('click', () => { index = i; show(); });
+      list.appendChild(li);
+    });
+  }
+
+  function show() {
+    const step = SCENARIOS[scenario][index];
+    document.querySelectorAll('.edge').forEach(e => e.classList.toggle('on', step.edges.includes(e.id)));
+    document.querySelectorAll('.elabel').forEach(l => l.classList.toggle('on', step.edges.includes(l.dataset.edge)));
+    [...list.children].forEach((li, i) => li.classList.toggle('on', i === index));
+    animateDots(step);
+  }
+
+  function animateDots(step) {
+    cancelAnimationFrame(raf);
+    dots.innerHTML = '';
+    if (reduce) return;
+    const runs = step.edges.filter(id => id !== 'e-bind').map(id => {
+      const path = document.getElementById(id);
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('r', 5.5);
+      c.setAttribute('class', 'dot');
+      c.setAttribute('fill', COLORS[path.classList.contains('policy') ? 'policy' : path.classList.contains('fiat') ? 'fiat' : path.classList.contains('signal') ? 'signal' : 'usdc']);
+      dots.appendChild(c);
+      return { path, c, len: path.getTotalLength() };
+    });
+    const start = performance.now(), dur = 1500;
+    const tick = now => {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      runs.forEach(r => {
+        const pt = r.path.getPointAtLength(eased * r.len);
+        r.c.setAttribute('cx', pt.x); r.c.setAttribute('cy', pt.y);
+        r.c.setAttribute('opacity', p > .92 ? (1 - p) / .08 : 1);
+      });
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+
+  function schedule() {
+    clearInterval(timer);
+    if (!playing) return;
+    timer = setInterval(() => { index = (index + 1) % SCENARIOS[scenario].length; show(); }, STEP_MS);
+  }
+
+  document.querySelectorAll('[data-scenario]').forEach(b => b.addEventListener('click', () => {
+    scenario = b.dataset.scenario; index = 0;
+    document.querySelectorAll('[data-scenario]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    renderList(); show(); schedule();
+  }));
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    playBtn.setAttribute('aria-pressed', String(!playing));
+    schedule();
+  });
+  if (reduce) { playBtn.textContent = 'Play'; }
+
+  renderList(); show(); schedule();
+})();
+</script>
