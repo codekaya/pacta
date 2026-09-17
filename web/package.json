@@ -10,7 +10,10 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test lib/*.test.ts"
+    "test": "node --test lib/*.test.ts",
+    "tw": "node scripts/tw.ts",
+    "deploy:policy": "node scripts/deploy-policy.ts",
+    "ptk:smoke": "node scripts/ptk-smoke.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^17.0.1",

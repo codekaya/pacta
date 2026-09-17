@@ -2,7 +2,7 @@
  * İptal politikası — Politika Taahhüt Kontratı'nın (PTK) TypeScript aynası.
  *
  * Bu dosyadaki `entitlement` ve `distribute`, contracts/policy içindeki Soroban
- * kontratıyla birebir aynı sonucu vermek zorundadır. Hasta ödeme sayfası buradan
+ * kontratıyla birebir aynı sonucu vermek zorundadır (parite vektörleri iki test dosyasında ortak). Hasta ödeme sayfası buradan
  * okur, Trustless Work'e giden `resolve-dispute` dağıtımları buradan üretilir,
  * kontrat ise aynı hesabı zincirde değiştirilemez biçimde taahhüt eder.
  * İkisi ayrışırsa Pacta taahhüt ettiği politikadan sapmış olur ve bu tespit edilebilir.
@@ -62,6 +62,12 @@ export function entitlement(policy: Policy, at: Date): Entitlement {
     tiers[tiers.length - 1]!;
 
   return withRefundBps(policy, matched.refundBps, matched);
+}
+
+/** Hasta klinikte: iade yok, kapora klinik ve ajans arasında bölünür (PTK `Reason::Arrival`). */
+export function arrivalEntitlement(policy: Policy): Entitlement {
+  const narrowest = byDaysDesc(policy.tiers).at(-1)!;
+  return withRefundBps(policy, 0, narrowest);
 }
 
 /** Klinik kaynaklı iptal: kademelere bakılmaz, iade tamdır. */

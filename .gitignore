@@ -12,3 +12,6 @@ node_modules/
 .next/
 next-env.d.ts
 *.tsbuildinfo
+
+# Trustless Work testnet wallets written by `npm run tw -- wallets`
+web/.tw-wallets.json

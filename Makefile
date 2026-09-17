@@ -9,12 +9,12 @@ all: check build
 
 ## Compile the contract to wasm.
 build:
-	cargo build -p x402-upto --target $(WASM_TARGET) --release
+	cargo build --workspace --target $(WASM_TARGET) --release
 	@ls -l $(WASM) 2>/dev/null || true
 
 ## Run the contract test suite in the host emulator.
 test:
-	cargo test -p x402-upto
+	cargo test --workspace
 
 fmt:
 	cargo fmt --all
@@ -22,11 +22,11 @@ fmt:
 ## Everything CI enforces.
 check:
 	cargo fmt --all -- --check
-	cargo clippy -p x402-upto --all-targets -- -D warnings
-	cargo test -p x402-upto
+	cargo clippy --workspace --all-targets -- -D warnings
+	cargo test --workspace
 
 lint:
-	cargo clippy -p x402-upto --all-targets -- -D warnings
+	cargo clippy --workspace --all-targets -- -D warnings
 
 ## Shrink the wasm before deploying. Requires stellar-cli >= 23.
 optimize: build

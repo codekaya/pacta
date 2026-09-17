@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseUsdc } from './money.ts';
 import {
+  arrivalEntitlement,
   clinicCancelEntitlement,
   distribute,
   entitlement,
@@ -46,6 +47,19 @@ test('işlem tarihi geçmişse en dar kademe uygulanır', () => {
 
 test('klinik iptali kademelere bakmaz', () => {
   assert.equal(clinicCancelEntitlement(policy).patientBps, 10_000);
+});
+
+test('varışta iade yok, işlem tarihine ne kadar kaldığından bağımsız', () => {
+  const e = arrivalEntitlement(policy);
+  assert.deepEqual([e.patientBps, e.clinicBps, e.agencyBps], [0, 9_000, 1_000]);
+});
+
+test('PTK parite vektörü: 869.5652174 USDC, 10 gün önce', () => {
+  const rows = distribute(parseUsdc('869.5652174'), entitlement(policy, at(10 * DAY_SECONDS)), parties);
+  assert.deepEqual(
+    rows.map((row) => row.amount),
+    [4_347_826_088n, 3_913_043_478n, 434_782_608n],
+  );
 });
 
 test('üç pay her kademede tam 10000 baz puana toplanır', () => {

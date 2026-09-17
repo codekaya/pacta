@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { formatUsdc } from './money';
-import { clinicCancelEntitlement, distribute, entitlement } from './policy';
+import { arrivalEntitlement, clinicCancelEntitlement, distribute, entitlement } from './policy';
 import { dealStore, type SettlementReason } from './deals';
 
 /**
@@ -39,7 +39,9 @@ export async function settleCancellation(
   const owed =
     reason === 'clinic-cancel'
       ? clinicCancelEntitlement(deal.policy)
-      : entitlement(deal.policy, at);
+      : reason === 'arrival'
+        ? arrivalEntitlement(deal.policy)
+        : entitlement(deal.policy, at);
 
   const rows = distribute(deal.escrowAmount, owed, deal.parties);
 
