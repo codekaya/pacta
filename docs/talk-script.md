@@ -1,172 +1,184 @@
 # Pacta — talk script
 
-Four minutes, spoken. Roughly 560 words at a calm pace, plus demo time. Cut marks
-for a 3-minute slot and an expansion for 5 are at the end.
+Casual, first person, about four minutes plus demo. Say it like you're explaining
+it to someone at the table, not presenting at them. Short sentences. Where a line
+feels like a slogan, drop it and say the plain version.
 
 **Before you go up**
-- Two browser windows side by side: the deposit notice `/d/d-8f3a91` (left, phone-width),
+- Two windows side by side: the deposit notice `/d/d-8f3a91` (left, phone-width),
   the clinic desk `/clinic` (right). A third tab with the policy contract on stellar.expert.
-- Deal restarted with **procedure in 20 days**, status "Deposit due". Clinic wallet holds USDC.
-- `web/.env.local` has `TW_API_KEY`. Check the notice says "Live on Stellar testnet" before you start.
-- Deck open on the shared screen; you switch to the browser at slide 4.
+- Deal restarted at **procedure in 20 days**, showing "Deposit due". Clinic wallet has USDC.
+- `web/.env.local` has `TW_API_KEY`. The notice should say "Live on Stellar testnet".
+- Deck on screen; you switch to the browser about a minute in.
 
 ---
 
-## 0:00 — Cover
+## Opening
 
-> Six dental implants in Istanbul. Eight hundred euros, due before the patient
-> gets on a plane. The clinic asks for a wire transfer, and the terms are
-> "non-refundable".
+> Hi, I'm Yusuf. I met some of you yesterday. My project is called Pacta, and I'm
+> working on payments for medical tourism.
 >
-> That is the normal way this money moves today, and both sides hate it.
+> If you know Turkey, you probably know it for cheap medical treatment. Over 1.4
+> million people came last year, mostly hair transplants and dentistry — people
+> literally call it Turkish hairlines. That's from the Turkish Exporters' Assembly,
+> the health services association. It's about three billion dollars a year.
 
-*(beat — click to Problem)*
+## The problem
 
-## 0:25 — The problem
-
-> The patient is sending eight hundred euros to a clinic they found on Instagram,
-> on a rail with no chargeback — wire, Western Union, MoneyGram. If anything goes
-> wrong, they have an email address.
+> Here's the part that doesn't work. You book from abroad, and before you fly you
+> pay a deposit — usually ten to thirty percent. So on an eight hundred euro
+> deposit, you're wiring eight hundred euros to a clinic you found on Instagram.
+> Wire, Western Union, sometimes MoneyGram. And it's non-refundable, always.
 >
-> The clinic is not the villain here. "Non-refundable" is its only defence against
-> no-shows. So distrust is priced into every booking, and the clinic loses the
-> patients who will not take that risk.
+> Once you send it, that's it. No chargeback on those rails. If the clinic ghosts
+> you, you have a WhatsApp chat.
 >
-> Türkiye treated 1.4 million health tourists last year, three billion dollars of
-> revenue. And the ticket is getting bigger: revenue per patient is up 39% in one
-> year. Fewer patients, more money at risk in each deposit.
-
-## 1:10 — What we built
-
-*(click to the four steps, then switch to the browser)*
-
-> Pacta holds that deposit until the patient physically walks into the clinic.
-> Let me show you the real thing — this is Stellar testnet, every step is a
-> transaction you can open.
-
-**DEMO — arrival path (about 60 seconds)**
-
-1. *Point at the notice.* > This is what the clinic sends. Licence number, procedure
-   date, and the cancellation schedule — as calendar dates and euros, not percentages.
-   The patient reads this **before** paying.
-2. *Click Pay €800.* > Three transactions. The deposit is locked in a Trustless Work
-   escrow, and the refund schedule is written to our policy contract, bound to that
-   escrow. *(point at the receipts as they appear)*
-3. *Switch to the clinic desk.* > The clinic sees eight hundred euros. It cannot
-   touch it. The patient arrives, the front desk checks them in — *click* — and the
-   patient confirms on their phone. *(back to notice, click "I am at the clinic")*
-4. > Released. Clinic ninety percent, agency ten — the agency keeps its commission
-   without ever holding the money.
-5. *Clinic desk → Withdraw to TL.* > And the clinic takes lira. SEP-38 quote,
-   SEP-6 withdrawal, real rate, money out to an IBAN. Five USDC, two hundred and
-   forty-two lira, completed.
-
-**DEMO — cancellation (about 20 seconds)**
-
-*(click Restart → 10d, Pay, then Cancel this booking)*
-
-> Now the other path. Same deposit, procedure ten days away, patient cancels.
-> Nobody negotiates. The contract computes the split — fifty percent back to the
-> patient — and the escrow pays exactly that.
-
-## 2:30 — The part that matters
-
-*(back to the deck: architecture, then the missing primitive slide)*
-
-> Trustless Work holds the money — it is on the SCF Integration List, and its roles
-> map one to one onto our flow.
+> And honestly the clinic isn't the bad guy here. They say non-refundable because
+> people book and don't show up, and that's their only protection. So everyone's
+> defending themselves and nobody trusts anybody.
 >
-> But an escrow cannot say "it depends on the date". In Trustless Work every refund
-> is a list of amounts the dispute resolver signs. **We are that resolver.** So on
-> its own, the refund would still be Pacta's decision — which is exactly the problem
-> we claim to solve.
->
-> So we wrote the one primitive the ecosystem was missing: a policy contract. Terms
-> committed per escrow, before the money moves. The split computed at ledger time,
-> so a cancellation cannot be back-dated into a cheaper tier. Recorded on-chain
-> before we sign the payout, and the function is public, so anyone can recompute it.
->
-> I want to be precise: this makes a deviation **provable**, not impossible. That is
-> what composition buys you here, and we would rather say it than be asked.
+> One more thing worth knowing: patient numbers are going down, but revenue per
+> patient is up about forty percent in a year. So the deposits are getting bigger.
 
-## 3:10 — Honest scope
+## What I built
 
-> What is real: escrow custody, the policy contract, USDC moving to three parties,
-> anchor quotes and lira withdrawals. What is not: the anchor's bank rail is a
-> sandbox, the licence check is a static list, and demo keys sign for every role —
-> in the product the patient signs with their own embedded wallet. Trustless Work
-> also takes 0.3% per payout; we measured it, and it is printed on the notice.
+*(switch to the browser)*
 
-## 3:30 — Model and ask
+> So I built the boring version of an escrow for exactly that deposit. Let me just
+> show you — this is running on Stellar testnet, everything you see is a real
+> transaction.
 
-> The clinic pays one to one and a half percent. Cards cost it two and a half to
-> four, plus chargebacks after the patient flies home. The patient pays nothing.
+**Demo, arrival — about a minute**
+
+1. *Point at the notice.* > This is the link the clinic sends. Their licence number,
+   the procedure, the date, and the cancellation terms. And the terms are dates and
+   euros, not percentages — until the 13th you get everything back, after that half,
+   last week nothing. You read that before you pay, not after.
+2. *Click Pay €800.* > Okay, so three transactions just happened. The money's locked
+   in a Trustless Work escrow, and those cancellation terms got written to a contract
+   I wrote, tied to that specific escrow. You can click any of these and see it.
+3. *Switch to the clinic desk.* > This is the clinic side. They can see the eight
+   hundred euros, they just can't touch it. Patient shows up, front desk checks them
+   in — *click* — and then the patient confirms on their own phone.
+   *(back to the notice, click "I am at the clinic")*
+4. > Released. Clinic gets ninety percent, agency gets ten. The agency still gets
+   paid, they just never hold the money — which, by the way, is how it works today,
+   the agency holds it.
+5. *Clinic desk → Withdraw to TL.* > And then the clinic takes lira out. Real quote,
+   real rate, out to an IBAN. Five USDC, two hundred forty-two lira. That went through
+   an anchor, so the clinic never touches crypto as far as they're concerned.
+
+**Demo, cancellation — about twenty seconds**
+
+*(Restart → 10d, Pay, then Cancel this booking)*
+
+> And the other side. Same deposit, procedure in ten days, patient cancels. Nobody
+> argues, nobody emails anyone. The contract works out the split — half back — and
+> the escrow pays that out.
+
+## The actual technical bit
+
+*(back to the deck)*
+
+> So, two things holding this up. Trustless Work holds the money — that's an escrow
+> protocol already on Stellar, it's on the SCF integration list, and their roles
+> happened to map onto mine almost exactly.
 >
-> Next: pilot clinics, embedded wallets, the agency split on-chain, audit, mainnet —
-> and SCF Integration Track in November, where our commitments are two numbers
-> anyone can count from the contract's events: deposit volume held, and deals closed.
+> But an escrow can't say "it depends on the date". In Trustless Work, a refund is
+> just a list of amounts that the dispute resolver signs. And I'm the dispute
+> resolver. So if I stopped there, the refund is still just me deciding — which is
+> the exact thing I said I was fixing.
 >
-> We are looking for two pilot clinics and an introduction to the Integration Track.
-> Clinics can stop saying "non-refundable". Patients can stop wiring blind.
+> So that's the one piece I wrote myself. A small contract that stores the terms
+> before the money moves, works out the split using ledger time so I can't
+> back-date a cancellation into a cheaper tier, and records it on-chain before I
+> sign anything. The function's public, so anyone can run the numbers themselves.
+>
+> To be straight about it: that makes it provable if I cheat, not impossible. I'd
+> rather say that than have someone find it.
+
+## What's real, what isn't
+
+> Quickly, so nobody's guessing. Real: the escrow, the contract, USDC actually
+> moving to three different people, the anchor quotes, the lira withdrawal. Not
+> real: the bank leg on the anchor is a sandbox, the clinic licence check is a
+> static list right now, and demo keys are signing for everyone — in the real
+> thing the patient signs with their own embedded wallet.
+>
+> Also Trustless Work takes 0.3% on payouts. I only found that by measuring it, so
+> it's printed on the notice now.
+
+## Where this goes
+
+> Business side is simple. Clinic pays one to one and a half percent. Cards cost
+> them two and a half to four plus chargebacks after the patient flies home. Patient
+> pays nothing.
+>
+> Next is pilot clinics, embedded wallets so the patient doesn't think about any of
+> this, agency split on-chain, audit, mainnet. And SCF Integration Track in November —
+> the nice thing there is my metrics are just two numbers anyone can count off the
+> contract: how much is held, and how many deals closed.
+>
+> What I actually need right now is two clinics willing to try it, and an intro for
+> the Integration Track. That's it — happy to take questions.
 
 ---
 
 ## If the demo breaks
 
-Say it plainly and keep moving; never debug on stage.
+Say it, don't fix it.
 
-- **A step hangs:** > Testnet is having a moment — here is the same run from an hour
-  ago. *(switch to the stellar.expert tab: the policy contract, then an escrow from
-  the CLI run.)*
-- **The API is down:** the site falls back to simulated mode and says so on the page.
-  > The escrow calls are simulated right now; the arithmetic is the same code, and
-  here are this morning's transactions on chain.
-- **Withdrawal is slow:** talk over it — > the anchor is polling for the bank leg —
-  and move to the cancellation path; come back to it at the end if it lands.
+- **A step hangs:** > Testnet's being slow — here's the same run from earlier.
+  *(switch to the stellar.expert tab.)*
+- **API down:** the site drops to simulated mode and says so on the page.
+  > Escrow calls are simulated right now, the math is the same code — here are this
+  morning's transactions.
+- **Withdrawal is slow:** > it's waiting on the bank leg — and move to the cancel
+  demo. Come back to it if it lands.
 
-## 3-minute cut
+## If you only get three minutes
 
-Drop the market paragraph (1:10) to one sentence: *"1.4 million patients, three
-billion dollars, and the ticket per patient is up 39% in a year."* Drop the
-withdrawal step from the demo and mention it in one line during the architecture
-slide. Keep the cancellation path — it is the product.
+Cut the revenue-per-patient line and the business model paragraph. Cut the lira
+withdrawal from the demo and mention it in one sentence instead. Keep the
+cancellation demo — that's the whole product.
 
-## 5-minute version
+## If you get five
 
-Add after "The part that matters":
-> Two keys, not one: the key that releases and the key that resolves disputes are
-> separate, because Trustless Work refuses a resolver that holds another role. And
-> our release key can open a dispute — which is why a cancellation needs no
-> signature from the patient at all. That is what lets the patient pay without ever
-> setting up a wallet.
+After the technical bit:
+> Small thing I liked: I need two separate keys, because Trustless Work won't let the
+> dispute resolver hold any other role. And the key that releases can also open a
+> dispute — which means when a patient cancels, they don't sign anything at all.
+> That's what lets someone pay without ever setting up a wallet.
 
-And after "Honest scope":
-> The policy math exists twice — once in Rust on-chain, once in TypeScript in the
-> app — and a shared test vector makes the two agree to the stroop. If they ever
-> disagree, the app refuses to send the payout.
+And after what's real:
+> The refund math exists twice, once in Rust on-chain and once in TypeScript in the
+> app, with a shared test vector so they agree exactly. If they ever disagree, the
+> app refuses to send the payout.
 
-## Answers to keep ready
+## Questions you'll probably get
 
-**"Why not just use Trustless Work?"** We do, for custody. It has no time trigger,
-so a date-based refund is not expressible: every refund is whatever the resolver
-signs. We added that piece and left the money where the ecosystem already solved it.
+**"Why not just use Trustless Work?"** I do, for holding the money. It has no time
+trigger, so date-based refunds aren't expressible — a refund is whatever the
+resolver signs. I added that piece and left custody where the ecosystem already
+solved it.
 
-**"There are six funded escrow projects on Stellar."** None in a vertical. Our moat
-is not escrow — it is the licence badge, the cancellation templates clinics
-actually use, arrival confirmation, and the agency payout channel.
+**"There are already escrow projects on Stellar."** Yeah, six funded ones. None of
+them are in a vertical. My moat isn't escrow — it's the licence badge, cancellation
+templates clinics actually use, arrival confirmation, and the agency payout.
 
-**"What is your value to the ecosystem?"** A lira off-ramp with a real payment
-behind every withdrawal. In our September snapshot, none of the listed anchors
-served TRY, and no health-tourism payments project was listed at all.
+**"What's the value to the ecosystem?"** A lira off-ramp with real payments behind
+it. When I checked in September, none of the listed anchors did TRY, and there was
+no health tourism payments project at all.
 
-**"Regulation?"** The patient pays abroad, the money sits in a contract — Pacta
-never takes custody — and the clinic receives lira from a licensed anchor. Being
-non-custodial strengthens that position.
+**"Regulation?"** Patient pays from abroad, money sits in a contract so I never hold
+it, clinic gets lira from a licensed anchor. Being non-custodial is what makes that
+work.
 
-**"Can Pacta steal the deposit?"** Pacta signs the payout, so nothing stops a
-deviation in the moment. What stops it is that the deviation is visible: terms and
-split are on-chain, and anyone can recompute them. Our roadmap moves the resolver
-role to a contract, which removes the discretion entirely.
+**"Can you steal the deposit?"** In the moment, nothing stops me signing the wrong
+split. What stops me is that it's visible — the terms and the split are on-chain and
+anyone can recompute them. Moving the resolver role into a contract is on the
+roadmap, and that removes it entirely.
 
-**"Why 1:100 amounts on testnet?"** The sandbox anchor caps single transfers. The
-policy math is identical at any scale; the parity tests run at full size.
+**"Why are the amounts so small on testnet?"** Sandbox anchor caps transfers, so the
+demo runs at one hundredth scale. The math is identical, and the tests run at full
+size.
