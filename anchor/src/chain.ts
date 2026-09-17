@@ -4,8 +4,10 @@ import type { NetworkConfig } from './config.ts';
 /** The on-chain half of a ramp: funding, trustlines, balances, payments. */
 export class Chain {
   readonly horizon: Horizon.Server;
+  readonly network: NetworkConfig;
 
-  constructor(readonly network: NetworkConfig) {
+  constructor(network: NetworkConfig) {
+    this.network = network;
     this.horizon = new Horizon.Server(network.horizonUrl);
   }
 

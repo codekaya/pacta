@@ -1,13 +1,15 @@
 /** A non-2xx answer from an anchor endpoint, with the parsed body when there is one. */
 export class AnchorError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-    readonly url: string,
-    readonly body?: unknown,
-  ) {
+  readonly status: number;
+  readonly url: string;
+  readonly body?: unknown;
+
+  constructor(status: number, message: string, url: string, body?: unknown) {
     super(message);
     this.name = 'AnchorError';
+    this.status = status;
+    this.url = url;
+    this.body = body;
   }
 }
 

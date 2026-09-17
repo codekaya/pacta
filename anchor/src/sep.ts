@@ -207,10 +207,13 @@ function priceParams(req: PriceRequest) {
 
 /** Public side of an anchor: discovery, capabilities, indicative prices, login. */
 export class AnchorClient {
-  private constructor(
-    readonly config: AnchorConfig,
-    readonly info: AnchorInfo,
-  ) {}
+  readonly config: AnchorConfig;
+  readonly info: AnchorInfo;
+
+  private constructor(config: AnchorConfig, info: AnchorInfo) {
+    this.config = config;
+    this.info = info;
+  }
 
   static async connect(config: AnchorConfig): Promise<AnchorClient> {
     return new AnchorClient(config, await discover(config));
@@ -274,11 +277,15 @@ export class AnchorClient {
 
 /** Everything that needs the SEP-10 JWT. */
 export class AnchorSession {
-  constructor(
-    readonly anchor: AnchorClient,
-    readonly account: string,
-    readonly token: string,
-  ) {}
+  readonly anchor: AnchorClient;
+  readonly account: string;
+  readonly token: string;
+
+  constructor(anchor: AnchorClient, account: string, token: string) {
+    this.anchor = anchor;
+    this.account = account;
+    this.token = token;
+  }
 
   private call<T>(url: string, opts: { method?: 'GET' | 'POST' | 'PUT'; body?: unknown } = {}): Promise<T> {
     return request<T>(url, { ...opts, token: this.token });

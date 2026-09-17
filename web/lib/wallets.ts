@@ -24,9 +24,11 @@ let cached: DemoWallets | null | undefined;
 
 export function demoWallets(): DemoWallets | null {
   if (cached !== undefined) return cached;
+  // On Vercel there is no wallet file: the same JSON lives in PACTA_WALLETS.
+  const inline = process.env.PACTA_WALLETS;
   const file = join(process.cwd(), '.tw-wallets.json');
-  if (!existsSync(file)) return (cached = null);
-  const stored = JSON.parse(readFileSync(file, 'utf8')) as Record<string, string>;
+  if (!inline && !existsSync(file)) return (cached = null);
+  const stored = JSON.parse(inline ?? readFileSync(file, 'utf8')) as Record<string, string>;
   if (!NAMES.every((n) => stored[n])) return (cached = null);
   cached = Object.fromEntries(NAMES.map((n) => [n, Keypair.fromSecret(stored[n]!)])) as DemoWallets;
   return cached;

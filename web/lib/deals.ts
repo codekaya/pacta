@@ -1,5 +1,6 @@
 import type { Parties, Policy } from './policy';
 import { parseUsdc } from './money';
+import { kvGet, kvPush, kvSet, kvValues } from './kv';
 
 /** created → funded → arrived (klinik işaretledi) → released; funded → refunded. */
 export type DealStatus = 'created' | 'funded' | 'arrived' | 'released' | 'refunded';
@@ -127,31 +128,30 @@ const DEMO_DEAL: Deal = {
   createdAt: Date.parse('2026-09-16T14:20:00+03:00') / 1000,
 };
 
-/** Survives HMR. Bump SEED when demo fixture copy changes. */
-const SEED = 4;
-const globalForDeals = globalThis as typeof globalThis & {
-  __pactaDeals?: Map<string, Deal>;
-  __pactaSeed?: number;
-};
-
-function table(): Map<string, Deal> {
-  if (globalForDeals.__pactaSeed !== SEED) {
-    globalForDeals.__pactaDeals = new Map([[DEMO_DEAL.id, { ...DEMO_DEAL }]]);
-    globalForDeals.__pactaSeed = SEED;
-  }
-  globalForDeals.__pactaDeals ??= new Map([[DEMO_DEAL.id, { ...DEMO_DEAL }]]);
-  return globalForDeals.__pactaDeals;
-}
+/** Bump when the demo fixture copy changes, so stored deals are reseeded. */
+const SEED = 5;
+const key = (id: string) => `pacta:${SEED}:deal:${id}`;
+const DEAL_PREFIX = `pacta:${SEED}:deal:`;
 
 export const dealStore: DealStore = {
   async get(id) {
-    return table().get(id);
+    const stored = await kvGet<Deal>(key(id));
+    if (stored) return stored;
+    // First read of a fresh store: hand back the demo fixture.
+    if (id !== DEMO_DEAL.id) return undefined;
+    await kvSet(key(DEMO_DEAL.id), DEMO_DEAL);
+    return { ...DEMO_DEAL };
   },
   async list() {
-    return [...table().values()].sort((a, b) => b.createdAt - a.createdAt);
+    const deals = await kvValues<Deal>(DEAL_PREFIX);
+    if (deals.length === 0) {
+      await kvSet(key(DEMO_DEAL.id), DEMO_DEAL);
+      return [{ ...DEMO_DEAL }];
+    }
+    return deals.sort((a, b) => b.createdAt - a.createdAt);
   },
   async save(deal) {
-    table().set(deal.id, deal);
+    await kvSet(key(deal.id), deal);
   },
 };
 
@@ -162,13 +162,13 @@ export function demoDealTemplate(): Deal {
   return { ...DEMO_DEAL, policy: { ...DEMO_DEAL.policy }, parties: { ...DEMO_DEAL.parties } };
 }
 
-const globalForWithdrawals = globalThis as typeof globalThis & { __pactaWithdrawals?: Withdrawal[] };
+const WITHDRAWALS_KEY = `pacta:${SEED}:withdrawals`;
 
 export const withdrawalStore = {
   async list(): Promise<Withdrawal[]> {
-    return [...(globalForWithdrawals.__pactaWithdrawals ?? [])].sort((a, b) => b.at - a.at);
+    return ((await kvGet<Withdrawal[]>(WITHDRAWALS_KEY)) ?? []).sort((a, b) => b.at - a.at);
   },
   async add(w: Withdrawal): Promise<void> {
-    (globalForWithdrawals.__pactaWithdrawals ??= []).push(w);
+    await kvPush(WITHDRAWALS_KEY, w);
   },
 };

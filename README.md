@@ -97,9 +97,13 @@ because the sandbox anchor caps single transfers.
 ```bash
 npm run tw -- arrival 10         # CLI: deploy → commit → fund → check-in → confirm → settle → release
 npm run tw -- cancel 10 10       # CLI: … → dispute → settle → resolve, procedure 10 days out
+npm run tw -- fund 1500          # buy testnet USDC for the patient through the anchor
+npm run tw -- topup              # recycle USDC from clinic and agency back to the patient
 npm run tw -- refund <C…>        # return a stuck escrow to the patient
 cd ../anchor && npm run demo     # TRY → USDC → TRY through the anchor
 ```
+
+Deploying the demo to a host: [`docs/deploy.md`](docs/deploy.md).
 
 ## Honest scope
 

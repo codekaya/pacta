@@ -6,6 +6,7 @@
  *   npm run tw -- cancel 10 10     deploy → fund → PTK commit → dispute → PTK settle → resolve  (2. arg: işleme kalan gün)
  *   npm run tw -- show <C...>      escrow durumu + canlı bakiye
  *   npm run tw -- topup            provalar arasında USDC'yi hastaya geri toplar
+ *   npm run tw -- fund 1500        anchor'dan TL yatırıp hastaya taze USDC alır
  *
  * Cüzdanlar web/.tw-wallets.json'da (gitignore'da). Hastaya test USDC'si:
  *   cd ../anchor && CLINIC_SECRET=$(node -p 'require("../web/.tw-wallets.json").patient') npm run onramp -- 1500
@@ -15,6 +16,13 @@ import { Asset, BASE_FEE, Horizon, Keypair, Networks, Operation, TransactionBuil
 import { formatUsdc, parseUsdc } from '../lib/money.ts';
 import { DAY_SECONDS, distribute, entitlement, type Parties, type Policy } from '../lib/policy.ts';
 import { PolicyCommitments } from '../lib/ptk.ts';
+import {
+  AnchorClient,
+  Chain,
+  keypairSigner,
+  loadConfig,
+  simulateBankTransfer,
+} from '@pacta/anchor';
 import { TESTNET_USDC, TrustlessWork, TrustlessWorkError, type Roles, type SignXdr } from '../lib/trustless.ts';
 
 const ENV_FILE = new URL('../.env.local', import.meta.url);
@@ -267,6 +275,32 @@ async function ledgerNow(): Promise<number> {
 }
 
 /**
+ * Buys fresh testnet USDC for the patient with the anchor's TRY on-ramp.
+ * The sandbox caps a single deposit, so ask for more by running it twice.
+ */
+async function cmdFund(tl = '1500'): Promise<void> {
+  const w = loadWallets(false);
+  const config = loadConfig(process.env);
+  const anchor = await AnchorClient.connect(config);
+  const chain = new Chain(config.network);
+  const patient = w.patient as unknown as Parameters<typeof keypairSigner>[0];
+
+  step(`SEP-10 login · ${anchor.info.homeDomain}`);
+  const session = await anchor.authenticate(w.patient.publicKey(), keypairSigner(patient));
+
+  step(`SEP-6 deposit · ${tl} TRY → USDC`);
+  const deposit = await session.deposit({ amount: tl });
+  await simulateBankTransfer(anchor, deposit.id, tl);
+  const tx = await session.waitForTransaction(deposit.id, { timeoutMs: 120_000 });
+  if (tx.status !== 'completed') throw new Error(`deposit ${deposit.id} ended ${tx.status}`);
+  log(`  ${tx.amount_in} TRY → ${tx.amount_out} USDC`);
+  if (tx.stellar_transaction_id) log(`  ${chain.txUrl(tx.stellar_transaction_id)}`);
+
+  const left = await usdcBalance(w.patient.publicKey());
+  log(`\n✓ patient holds ${left} USDC — ${Math.floor(Number(left) / 8.6956522)} runs at €800`);
+}
+
+/**
  * Rebalances the demo: clinic and agency send their USDC back to the patient,
  * so the notice can be paid again. Every run of the demo drains the patient.
  */
@@ -317,6 +351,7 @@ const commands: Record<string, (...a: string[]) => Promise<void>> = {
   wallets: cmdWallets,
   arrival: cmdArrival,
   cancel: cmdCancel,
+  fund: cmdFund,
   topup: cmdTopup,
   refund: cmdRefund,
   show: cmdShow,

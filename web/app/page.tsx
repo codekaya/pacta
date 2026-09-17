@@ -3,6 +3,9 @@ import { Frame, Wordmark } from '@/components/Frame';
 import { formatDate, formatEur } from '@/lib/money';
 import { DEMO_DEAL_ID, dealStore } from '@/lib/deals';
 
+// The notice moves with every demo run; a prerendered snapshot would go stale.
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const deal = await dealStore.get(DEMO_DEAL_ID);
   if (!deal) return null;
