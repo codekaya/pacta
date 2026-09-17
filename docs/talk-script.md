@@ -18,27 +18,39 @@ feels like a slogan, drop it and say the plain version.
 > Hi, I'm Yusuf. I met some of you yesterday. My project is called Pacta, and I'm
 > working on payments for medical tourism.
 >
-> If you know Turkey, you probably know it for cheap medical treatment. Over 1.4
-> million people came last year, mostly hair transplants and dentistry — people
-> literally call it Turkish hairlines. That's from the Turkish Exporters' Assembly,
-> the health services association. It's about three billion dollars a year.
+> If you know Turkey, you probably know it's relatively cheap for medical treatment.
+> Every year over 1.4 million people come for it, mostly hair transplants and
+> dentistry — it's known as Turkish hairlines at this point. That's about three
+> billion dollars a year. The numbers are from HİB, the services exporters'
+> association, so it's official trade data, not my estimate.
 
 ## The problem
 
-> Here's the part that doesn't work. You book from abroad, and before you fly you
-> pay a deposit — usually ten to thirty percent. So on an eight hundred euro
-> deposit, you're wiring eight hundred euros to a clinic you found on Instagram.
-> Wire, Western Union, sometimes MoneyGram. And it's non-refundable, always.
+> So the problem. Let me tell it as a story, because that's how I ran into it.
 >
-> Once you send it, that's it. No chargeback on those rails. If the clinic ghosts
-> you, you have a WhatsApp chat.
+> A guy in Russia, or Germany, or France is scrolling reels, and a Turkish clinic
+> comes up. Before and after photos, price is a third of what it is at home, and
+> there's a WhatsApp number. He messages, they send him a date. Then they ask for
+> a deposit before he books the flight — usually ten to thirty percent.
 >
-> And honestly the clinic isn't the bad guy here. They say non-refundable because
-> people book and don't show up, and that's their only protection. So everyone's
-> defending themselves and nobody trusts anybody.
+> So now he's sending eight hundred euros by wire, or Western Union, to a clinic he
+> found on Instagram. And the terms are non-refundable. Always.
 >
-> One more thing worth knowing: patient numbers are going down, but revenue per
-> patient is up about forty percent in a year. So the deposits are getting bigger.
+> Once he hits send, that's it. There's no chargeback on those rails. If the clinic
+> stops replying, what he has is a WhatsApp chat.
+>
+> And that happens — take the deposit, disappear, or the clinic turns out to be
+> someone's apartment. If you search for it you'll find the forums, and some clinics
+> put warnings about it on their own websites, which tells you how common it is.
+> [If you have a specific case or a number, say it here — it hits harder than "it happens".]
+>
+> But the clinic isn't the bad guy either. They say non-refundable because people
+> book and don't show up, and that's the only protection they have. So both sides
+> are defending themselves and nobody trusts anybody.
+>
+> And it's getting more expensive to get wrong: patient numbers are down a bit, but
+> revenue per patient is up about forty percent in a year. Bigger deposits, same
+> WhatsApp trust.
 
 ## What I built
 
@@ -138,7 +150,9 @@ Say it, don't fix it.
 
 ## If you only get three minutes
 
-Cut the revenue-per-patient line and the business model paragraph. Cut the lira
+Keep the story, cut it to four sentences: scrolling reels → deposit before the
+flight → wire, non-refundable → no chargeback. Cut the revenue-per-patient line and
+the business model paragraph. Cut the lira
 withdrawal from the demo and mention it in one sentence instead. Keep the
 cancellation demo — that's the whole product.
 
