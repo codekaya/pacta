@@ -74,20 +74,11 @@ older than the deposit — you can check that from the timestamps.*
 
 ### Slide 3 — the QR
 
-> Then you fly in.
+> Then you fly in. The front desk marks you as arrived, you scan the QR and
+> confirm on your own phone — and only then does the escrow release.
 >
-> The front desk presses "patient has arrived". That's one transaction, signed
-> with the clinic's key, and it moves nothing — it just marks the escrow.
->
-> The desk shows this QR, you scan it, and it opens your own page on your phone.
-> You press confirm. That's three more: your confirmation, then my contract
-> writing down the split before anyone gets paid, then the release.
->
-> Both of you, or nothing moves. The clinic can't release on its own. And it can't
-> be released against you.
-
-*Seven transactions from pay to payout: create the escrow, commit the terms, lock
-the money, check in, confirm, record the split, release.*
+> Both sides, or nothing moves. Clinic ninety percent, agency ten: the agency
+> still gets paid, it just never holds the money.
 
 ## Slide — the architecture
 
@@ -138,31 +129,18 @@ the money, check in, confirm, record the split, release.*
 > Real: the escrow, the contract, the money. Arrival is seven transactions, a
 > cancellation six, all on testnet, all public.
 >
-> The lira is real too. Five USDC through the test anchor we were given here came
-> back as two hundred forty-two lira, with a bank reference — and it's standard
-> SEPs, so any other anchor is a config change, not a rewrite.
+> The turkish lira is real too. with the test anchor we were given here, with a bank reference — and it's standard SEPs, so any other anchor is a config change, not a rewrite.
 >
-> Simulated: the bank payout at the very end, which is that anchor's sandbox. The
-> licence check is a static list, not a live ministry query yet. And in the demo
-> one set of keys signs for everybody; in production the patient has their own
+> Simulated: the bank payout at the very end, which is that anchor's sandbox. The  
+> licence check is a static list, not a live ministry query yet. And in the demo  
+> one set of keys signs for everybody; in production the patient has their own  
 > wallet.
->
-> One thing testing turned up: Trustless Work takes 0.3 percent on payouts. So a
-> full refund is really 99.7. That's printed on the patient's page now.
 
 
 
 ## Where this goes
 
-> Right now I have a list of over a hundred clinics and I'm messaging all of them
-> this week, looking for the first pilot. Nothing signed yet.
->
-> The money side is simple. Clinic pays one to one and a half percent. Cards cost
-> them two and a half to four, plus chargebacks after the patient flies home.
-> Patient pays nothing.
->
-> And this isn't only hair transplants. It's a deposit, a date, and a refund
-> schedule. Dental, IVF, surgery. Same contract, the clinic picks its own numbers.
+> Right now I scrapped a list of over a 50 clinics and I will be messaging all of them this week, looking for the first pilot. Nothing signed yet.
 >
 > It isn't only Turkey either. Thailand, Mexico, Hungary, same story. The only
 > local part is the payout, and that's the anchor. Swap the anchor, everything else
@@ -176,7 +154,9 @@ the money, check in, confirm, record the split, release.*
 
 ---
 
-
+> The money side is simple. Clinic pays one to one and a half percent. Cards cost them two and a half to four, plus chargebacks after the patient flies home. Patient pays nothing.
+>
+> And this isn't only hair transplants. It's a deposit, a date, and a refund schedule. Dental, IVF, surgery. Same contract, the clinic picks its own numbers.
 
 ## The seven transactions, if someone digs
 
