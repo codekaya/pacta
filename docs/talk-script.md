@@ -115,29 +115,21 @@ the money, check in, confirm, record the split, release.*
 
 *(the "escrow alone" slide)*
 
-> Two parts. The money sits in Trustless Work. That's an escrow already on Stellar —
-> SCF funded them, they're on the integration list.
+> Two parts. The money sits in Trustless Work — an escrow that's already on
+> Stellar, SCF-funded, on the integration list.
 >
-> An escrow doesn't know what day it is. Cancel, and someone has to tell it who gets
-> what. That someone is me. So escrow alone means the refund is whatever I sign.
+> But an escrow doesn't know what day it is. It holds money and pays out when it's
+> told to. Someone still has to decide the refund. That's the gap.
 >
-> That's why the second contract. Terms go in before you pay, locked. Cancel, and it
-> works out the split off the chain's clock. Then I have to write that number down
-> before the money moves. If I pay something else, the two don't match, and anyone
-> can see it.
+> So the terms go into a second contract before the deposit does, and they lock.
+> On a cancellation it works out the split itself, from the chain's clock, and
+> publishes that number before the money moves.
 >
-> I can still cheat. Not quietly.
+> Two records for every deal: what the contract said, and what actually got paid.
+> If they don't match, anyone can see it.
 
-*If a judge wants it concrete: ten days out, the contract says 4.35 to the
-patient, 3.91 to the clinic, 0.43 to the agency. If 2 went to the patient
-instead, the record says 4.35 and the payment says 2. Nobody has to take my word
-for it — the two numbers are both public.*
-
-*And if they push further — "so you can still do it once": yes, once, visibly.
-The fix is moving the resolver role into the contract itself, which is on the
-roadmap. Today the contract holds the promise; next it holds the payout too.*
-
-
+*Concrete, if asked: at ten days the contract says 4.35 to the patient, 3.91 to
+the clinic, 0.43 to the agency — the record and the payout are both public.*
 
 ## What actually ran
 
