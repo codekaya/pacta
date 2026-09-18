@@ -30,11 +30,13 @@
 
 //////
 
-> And that happens a lot. You can see with just one quick trustpilot search   
+> And that happens a lot. You can see with just one quick trustpilot search  
 > or at reddit threads and review sites  
 > and the pattern is same every time: take the deposit, stop answering.
 >
 > And it is also known in turkey. Last April the health ministry brought in a whole new medical tourism regulation, but that didnot stopped the complains
+
+
 
 ## What I built — one block per screenshot slide
 
@@ -84,10 +86,11 @@ older than the deposit — you can check that from the timestamps.*
 > Both of you, or nothing moves. The clinic can't release on its own. And it can't
 > be released against you.
 >
-> Clinic gets ninety percent, agency ten. The agency still gets paid. They just
-> don't hold the money any more. Today they do.
+>
 
-*Seven transactions from pay to payout, and I sign two of them.*
+*Seven transactions from pay to payout. The patient signs two — paying, and
+confirming they're there. The clinic signs one, the check-in. The other four are
+mine: I create the escrow, I write the terms down, I record the split, I release.*
 
 ## Slide — the architecture
 
@@ -98,12 +101,16 @@ older than the deposit — you can check that from the timestamps.*
 > Left is you. Right is the clinic. In the middle, two contracts: the escrow that
 > holds the money, and my contract that holds the terms.
 >
-> Arrival is what I just walked through — pay, check in, confirm, release. Seven
-> transactions, and I sign two of them.
+> Arrival is what I just walked through. Seven transactions in total. You sign
+> two of them — when you pay, and when you confirm you're at the clinic. The
+> clinic signs one, the check-in. The other four are mine: I create the escrow, I
+> write your terms into the contract, I record the split, and I release the money.
 >
-> Cancelling is six. My key opens it, so you don't sign anything — you never
-> needed a wallet. The contract works out the split from the terms and the date,
-> and that's what gets paid.
+> Cancelling is six, and five of those are mine. You sign nothing — that's the
+> point, you never needed a wallet. My key opens the cancellation, the contract
+> works out the split from the terms and the date, and my second key pays it.
+>
+> So yes — I sign most of them. Which is exactly why the second contract exists.
 >
 > And the last hop, bottom right. The clinic asks the anchor for a rate, gets a
 > firm quote, sends the USDC, and lira lands in their bank account. They see a
@@ -111,6 +118,8 @@ older than the deposit — you can check that from the timestamps.*
 >
 > Every step leaves a transaction, and the patient sees them on their own page as
 > links. It's the chain, not my database.
+
+
 
 ## Why there are two contracts
 
@@ -125,6 +134,8 @@ older than the deposit — you can check that from the timestamps.*
 >
 > So if I pay something else, anyone can put the two side by side and see it. I can
 > still cheat. Not quietly.
+
+
 
 ## What actually ran
 
@@ -143,12 +154,16 @@ older than the deposit — you can check that from the timestamps.*
 > One thing I only found by testing. Trustless Work takes 0.3 percent when it pays
 > out. So a full refund is really 99.7. It's written on the patient's page now.
 
+
+
 ## What isn't finished
 
 > Two things. The licence check is a static list, I don't query the ministry yet.
 > And in the demo my keys sign for everybody. In the real thing the patient has
 > their own wallet and I only hold the key that releases. That's a wallet
 > integration, not a rewrite.
+
+
 
 ## Where this goes
 
@@ -174,6 +189,32 @@ older than the deposit — you can check that from the timestamps.*
 
 ---
 
+
+
+## The seven transactions, if someone digs
+
+Know this cold; don't read it out.
+
+| # | What | Who signs |
+|---|---|---|
+| 1 | Escrow created (roles written in) | Pacta release key |
+| 2 | Cancellation terms committed to the policy contract | Pacta release key |
+| 3 | USDC funded into the escrow | **Patient** |
+| 4 | Milestone marked "arrived" | **Clinic** |
+| 5 | Milestone approved | **Patient** |
+| 6 | Split recorded on the policy contract | Pacta release key |
+| 7 | Escrow released to the clinic | Pacta release key |
+
+Cancellation replaces 4–7 with three: dispute opened (Pacta release key), split
+recorded (Pacta release key), payout (Pacta **resolver** key — a different key,
+because Trustless Work refuses a resolver that holds any other role). Six total,
+five of them mine, and the patient signs nothing after paying.
+
+Steps 1 and 2 could be anyone's — they're plumbing, and in production they're
+paid for by us so the clinic doesn't need XLM. Steps 6 and 7 are the ones that
+matter: 7 moves money, and 6 is the promise I publish before 7. That ordering is
+the whole argument of the next slide.
+
 ## If someone asks to see it
 
 You have no demo to break, which is the point. If a judge wants proof:
@@ -184,6 +225,8 @@ said. "That's a cancellation, on chain, this morning."
 - Or offer it after: "I can run one end to end for you in about a minute, it's all
 on testnet." Say that to a judge who is genuinely interested — it's a better
 conversation than a stage demo anyway.
+
+
 
 ## If you only get three minutes
 
@@ -207,6 +250,8 @@ And after what's real:
 > The refund math is written twice. Once in the contract, once in the app. They
 > share a test, so they have to agree exactly. If they ever don't, the app refuses
 > to pay.
+
+
 
 ## Sources for the problem section
 
