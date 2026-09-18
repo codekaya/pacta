@@ -1,39 +1,18 @@
 # Pacta — talk script
 
-Casual, first person. About four minutes of talking, one minute of screen — fits a
-five-minute slot with room. Say it like you're explaining it to someone at the
-table, not presenting at them. Where a line feels like a slogan, say the plain
-version instead.
+Casual, first person, no live demo. About four and a half minutes; fits a
+five-minute slot. Say it like you're explaining it to someone at the table, not
+presenting at them. Where a line feels like a slogan, say the plain version.
 
-**The demo is pre-run.** You are showing what already happened, not waiting for
-transactions on stage. Do this before you go up:
+**Before you go up**
 
-```bash
-cd web
-npm run tw -- topup                # or: npm run tw -- fund 1500
-npm run tw -- cancel 5 10          # the cancellation, on chain, ~40s
-```
-
-Keep the escrow address that command prints — that's your cancellation tab.
-
-Then, in the browser, run the arrival path once so the notice ends in its
-finished state: Restart → 20d, Pay, clinic desk → Patient has arrived, notice →
-I am at the clinic, clinic desk → Withdraw to TL.
-
-**Four tabs, in this order:**
-
-1. The notice `/d/d-8f3a91`, showing the released deal and its receipts.
-2. The clinic desk `/clinic`, showing the withdrawal row.
-3. stellar.expert on the cancellation escrow from the CLI run — its payments tab,
-   three payments visible.
-4. stellar.expert on the policy contract, in case someone asks.
-
-Check the notice says **Live on Stellar testnet** in small type. Deck on the
-shared screen; you switch to the browser about ninety seconds in.
+- Deck on the shared screen. That's the only thing you drive.
+- Two tabs open but not shown, in case a judge asks afterwards: the policy
+  contract on stellar.expert, and an escrow from a run with its three payments.
+- Know these four numbers cold: 7 transactions on the arrival path, 6 on a
+  cancellation, 242 lira for 5 USDC, 0.3% Trustless Work fee.
 
 ---
-
-
 
 ## Opening
 
@@ -45,8 +24,6 @@ shared screen; you switch to the browser about ninety seconds in.
 > dentistry — it's known as Turkish hairlines at this point. That's about three
 > billion dollars a year. The numbers are from HİB, the services exporters'
 > association, so it's official trade data, not my estimate.
-
-
 
 ## The problem
 
@@ -61,8 +38,6 @@ shared screen; you switch to the browser about ninety seconds in.
 >
 > Once he hits send, There's no chargeback. If the clinic stops replying, what he has is a WhatsApp chat.
 
-
-
 ---
 
 //////
@@ -70,49 +45,38 @@ shared screen; you switch to the browser about ninety seconds in.
 > And that happens a lot. You can see with just one quick trustpilot search and reddit threads and review sites  
 > and the pattern is identical every time: take the deposit, stop answering.
 >
->
 > And Turkey knows. Last April the health ministry brought in a whole new medical tourism regulation, but that didnot stopped the complains
->
->
 
 ## What I built
 
-*(switch to the browser)*
+*(architecture slide)*
 
-> So I built it. It's a working proof of concept on Stellar testnet, and I ran the
-> whole thing this morning — so I'm not going to make you watch transactions
-> confirm. Everything on this screen already happened, and you can click any of it.
+> So that's the problem I picked. Here's what I built for it, and I'll be straight
+> with you about which parts are real.
+>
+> The clinic sends the patient a link instead of an IBAN. On that page: the
+> clinic's licence number, the date, and the cancellation terms — written as dates
+> and euros, not percentages. Until this date you get everything back, after that
+> half, last week nothing. The patient reads it before paying, not after.
+>
+> The patient pays, and the money goes into an escrow on Stellar. Not to the
+> clinic. The clinic can see it sitting there and can't touch it.
+>
+> When the patient shows up, the front desk checks them in, the patient confirms
+> from their phone, and only then does the escrow release — both sides, or it
+> doesn't move. Clinic gets ninety percent, agency ten. The agency still gets paid,
+> it just never holds the money, which is how it works today.
+>
+> And then the clinic takes lira out through a Stellar anchor, at a locked rate,
+> straight to a bank account. As far as the clinic is concerned it never touched
+> crypto.
+>
+> If the patient cancels instead, nobody emails anyone. The refund is whatever the
+> schedule said on the day they booked.
 
-**Walkthrough, about a minute. Nothing to wait for.**
+## Why there are two contracts
 
-1. *Notice tab.* > This is the link the clinic sends the patient. Licence number,
-   procedure, date, and the cancellation terms — as dates and euros, not
-   percentages. Until the 13th you get everything back, after that half, last week
-   nothing. The patient reads this before paying.
-2. *Scroll to the receipt list.* > When the patient pays, this is what happens.
-   Escrow deployed, cancellation terms written to my contract, money locked. Three
-   transactions. Every line here is a link.
-3. *Click one — the explorer tab opens.* > That's it on chain. Not my database.
-4. *Clinic desk tab.* > Clinic side. They can see the eight hundred euros, they
-   can't touch it. When the patient arrives, front desk checks them in, patient
-   confirms on their phone, and only then does it release. Clinic ninety percent,
-   agency ten — the agency still gets paid, it just never holds the money, which
-   is how it works today.
-5. *Point at the withdrawal row.* > And this is the clinic taking lira out. Five
-   USDC, two hundred forty-two lira, through an anchor. The clinic never thinks
-   about crypto.
-6. *Cancellation tab — the explorer, three payments.* > And the other path. Same
-   deposit, procedure ten days away, patient cancels. Nobody emails anyone. The
-   contract worked out the split — half back to the patient — and the escrow paid
-   exactly that. Three payments, one transaction.
-
-*(If you have spare time and nerve: click Cancel live instead of showing the tab.
-It takes about thirty seconds. Talk over it — the next section fills exactly that
-gap. If you are at all tight, don't.)*
-
-## The actual technical bit
-
-*(back to the deck — the architecture slide)*
+*(the "escrow alone" slide)*
 
 > Two pieces. Trustless Work holds the money — that's an escrow protocol already on
 > Stellar, SCF has funded them several times, they're on the integration list. I
@@ -136,75 +100,66 @@ gap. If you are at all tight, don't.)*
 > match, and anyone can see it. It doesn't make cheating impossible. It makes it
 > obvious. I'd rather tell you that than have you find it.
 
-## What's real, what isn't
+## What actually ran
 
-> Quickly, so nobody's guessing. Real: the escrow, the contract, USDC actually
-> moving to three different people, the anchor quotes, the lira withdrawal. Not
-> real: the bank leg on the anchor is a sandbox, the clinic licence check is a
-> static list right now, and demo keys are signing for everyone — in the real
-> thing the patient signs with their own embedded wallet.
+> And this isn't a mockup. I ran the whole thing on Stellar testnet.
 >
-> Also Trustless Work takes 0.3% on payouts. I only found that by measuring it, so
-> it's printed on the notice now.
+> The arrival path — pay, commit the terms, lock the money, check in, confirm,
+> record the split, release — is seven transactions, and they're all on chain. A
+> cancellation ten days out is six, and the patient got exactly half back: the
+> contract worked out the split, I paid that, and both are public.
+>
+> The lira side is real too. Five USDC out through the anchor came back as two
+> hundred forty-two lira, with a bank reference. The only simulated part is the
+> bank wire itself, because that's the sandbox anchor — in production that's the
+> anchor's job, not mine.
+>
+> One thing I only found by measuring: Trustless Work takes 0.3% on payouts. So a
+> hundred percent refund actually lands as 99.7. It's printed on the patient's page
+> now, because they should see it before they pay.
 
+## What isn't finished
 
+> What's not finished, so nobody has to guess. The clinic licence check is a
+> static list right now, not a live registry call. And in the demo my own keys sign
+> for everyone — in the real thing the patient signs with their own embedded
+> wallet, and I only ever hold the release key. That's the next piece of work, and
+> it's a wallet integration, not a rewrite.
 
 ## Where this goes
 
-> So where this is right now. I've listed over a hundred clinics, and this week I'm
-> cold DMing every one of them to find the first pilot. Nothing signed yet — I'd
-> rather say that than dress it up. What I'm looking for is one clinic that will
-> run real deposits through it.
+> Business side is simple. Clinic pays one to one and a half percent. Cards cost
+> them two and a half to four plus chargebacks after the patient flies home. Patient
+> pays nothing.
 >
-> The money side is simple. Clinic pays one to one and a half percent. Cards cost
-> them two and a half to four, plus chargebacks after the patient flies home. The
-> patient pays nothing.
+> Next is pilot clinics, embedded wallets so the patient doesn't think about any of
+> this, agency split on-chain, audit, mainnet. And SCF Integration Track in November —
+> the nice thing there is my metrics are just two numbers anyone can count off the
+> contract: how much is held, and how many deals closed.
 >
-> And none of this is specific to hair transplants. It's a deposit, a date, and a
-> refund schedule. Dental, IVF, aesthetic surgery — same product, same contract, I
-> just change the tiers. The clinic writes its own policy; I don't decide it.
->
-> It's not specific to Turkey either. Thailand, Mexico, Hungary — same pattern: a
-> patient paying a stranger abroad, before they travel, on a rail with no recourse.
-> Turkey is the biggest one, and the one I know. The lira off-ramp is the part
-> that's country-specific, and that's exactly what the anchor handles — different
-> country, different anchor, everything above it stays.
->
-> And honestly it's bigger than medical. Anything where someone pays a deposit up
-> front, to someone they've never met, against a date in the future. That's the
-> primitive I've built. I'm starting with the version I understand.
->
-> What I need right now is two clinics willing to try it, and an intro for the SCF
-> Integration Track in November. That's it — happy to take questions.
+> What I actually need right now is two clinics willing to try it, and an intro for
+> the Integration Track. That's it — happy to take questions.
 
 ---
 
+## If someone asks to see it
 
+You have no demo to break, which is the point. If a judge wants proof:
 
-## If the demo breaks
-
-Say it, don't fix it.
-
-Nothing runs live, so there is not much to break. What's left:
-
-- **A tab didn't load, or the dev server died:** > the site's local, give me a
-  second — *(switch to the stellar.expert tab)* — but here's the chain, which is
-  the part that matters.
-- **You chose to cancel live and it hangs:** > testnet's being slow, this normally
-  takes half a minute — *(switch to tab 3)* — here's the same thing from this
-  morning.
-- **Someone asks to see it live:** say yes, and start the cancel while you answer
-  the next question. It takes about thirty seconds.
-
-
+- Open the escrow tab: three payments, one transaction, the amounts the schedule
+  said. "That's a cancellation, on chain, this morning."
+- Or the contract tab: the terms and the recorded split.
+- Or offer it after: "I can run one end to end for you in about a minute, it's all
+  on testnet." Say that to a judge who is genuinely interested — it's a better
+  conversation than a stage demo anyway.
 
 ## If you only get three minutes
 
 Keep the story, cut it to four sentences: scrolling reels → deposit before the
-flight → wire, non-refundable → no chargeback. Cut the revenue-per-patient line and
-the business model paragraph. In the walkthrough, cut steps 3 and 5 — the explorer
-click and the lira row — and mention lira in one sentence. Keep the cancellation
-tab: that's the whole product.
+flight → wire, non-refundable → no chargeback. Cut the business model paragraph.
+In "What I built", cut the agency sentence and the lira paragraph, and in "What
+actually ran" keep only the cancellation numbers. Never cut the line about being
+the dispute resolver — that's the one that makes the rest credible.
 
 ## If you get five
 
@@ -220,8 +175,6 @@ And after what's real:
 > The refund math exists twice, once in Rust on-chain and once in TypeScript in the
 > app, with a shared test vector so they agree exactly. If they ever disagree, the
 > app refuses to send the payout.
-
-
 
 ## Sources for the problem section
 
