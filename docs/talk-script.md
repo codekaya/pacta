@@ -85,12 +85,9 @@ older than the deposit — you can check that from the timestamps.*
 >
 > Both of you, or nothing moves. The clinic can't release on its own. And it can't
 > be released against you.
->
->
 
-*Seven transactions from pay to payout. Two are the patient's — paying, and
-confirming. One is the clinic's. The other four run automatically: create the
-escrow, write the terms, record the split, release.*
+*Seven transactions from pay to payout: create the escrow, commit the terms, lock
+the money, check in, confirm, record the split, release.*
 
 ## Slide — the architecture
 
@@ -101,17 +98,18 @@ escrow, write the terms, record the split, release.*
 > Left is you. Right is the clinic. In the middle, two contracts: the escrow that
 > holds the money, and my contract that holds the terms.
 >
-> Arrival is what I just walked through. Seven transactions in total. Two of them
-> are yours — you pay, and you confirm you're at the clinic. One is the clinic's,
-> the check-in. The other four the system does on its own: creates the escrow,
-> writes your terms in, records the split, releases the money. Nobody sits there
-> typing an amount.
+> Arrival is seven transactions, in this order.
 >
-> Cancelling is six, and you sign none of them. The contract works out the split
-> from the terms and the date, and the payout follows that number. You never
-> needed a wallet at all.
+> The escrow gets created. The cancellation terms get written into the contract,
+> tied to that escrow. The money locks. Then the check-in. Then the confirmation.
+> Then the contract records the split — who gets what, written down before
+> anything moves. And then the money moves.
 >
-> But those four keys are Pacta's. Which is exactly why there's a second contract.
+> Cancelling is six. Same first three. Then the cancellation opens, the contract
+> works out the split from the terms and the date, and that's what gets paid.
+>
+> The order is the point. The split is always published before the money goes
+> anywhere.
 >
 > And the last hop, bottom right. The clinic asks the anchor for a rate, gets a
 > firm quote, sends the USDC, and lira lands in their bank account. They see a
@@ -196,15 +194,17 @@ escrow, write the terms, record the split, release.*
 
 Know this cold; don't read it out.
 
-| # | What | Who signs |
-|---|---|---|
-| 1 | Escrow created (roles written in) | service, automatic |
-| 2 | Cancellation terms committed to the policy contract | service, automatic |
-| 3 | USDC funded into the escrow | **Patient** |
-| 4 | Milestone marked "arrived" | **Clinic** |
-| 5 | Milestone approved | **Patient** |
-| 6 | Split recorded on the policy contract | service, automatic |
-| 7 | Escrow released to the clinic | service, automatic |
+
+| #   | What                                                | Who signs          |
+| --- | --------------------------------------------------- | ------------------ |
+| 1   | Escrow created (roles written in)                   | service, automatic |
+| 2   | Cancellation terms committed to the policy contract | service, automatic |
+| 3   | USDC funded into the escrow                         | **Patient**        |
+| 4   | Milestone marked "arrived"                          | **Clinic**         |
+| 5   | Milestone approved                                  | **Patient**        |
+| 6   | Split recorded on the policy contract               | service, automatic |
+| 7   | Escrow released to the clinic                       | service, automatic |
+
 
 Cancellation replaces 4–7 with three: the dispute is opened, the split is
 recorded, the payout goes out. Six in total, and the patient signs nothing after
