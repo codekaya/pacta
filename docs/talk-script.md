@@ -89,23 +89,28 @@ older than the deposit — you can check that from the timestamps.*
 
 *Seven transactions from pay to payout, and I sign two of them.*
 
-### Slide 4 — the receipts
+## Slide — the architecture
 
-> And this is what you get as a patient. Not a status badge from my database —
-> the actual list. Escrow created, terms committed, money locked, clinic marked
-> arrival. Every line is a link to the chain.
->
-> Then the clinic takes lira out. It asks the anchor for a rate, gets a firm quote,
-> sends the USDC, and the anchor pays their bank account in lira. They never touch
-> crypto — they see a rate and an IBAN.
->
-> And if you cancel, nobody argues with you. My key opens the dispute — you don't
-> sign anything, you don't need a wallet. The contract works out the split from the
-> terms and the date. Then it gets paid. Six transactions, and you get exactly what
-> the page said.
+*(the diagram. This is where you tie the whole thing together.)*
 
-*If someone asks why the patient doesn't sign the cancellation: the key that
-releases is also allowed to open a dispute, so cancelling needs nothing from them.*
+> So here's the whole thing in one picture.
+>
+> Left is you. Right is the clinic. In the middle, two contracts: the escrow that
+> holds the money, and my contract that holds the terms.
+>
+> Arrival is what I just walked through — pay, check in, confirm, release. Seven
+> transactions, and I sign two of them.
+>
+> Cancelling is six. My key opens it, so you don't sign anything — you never
+> needed a wallet. The contract works out the split from the terms and the date,
+> and that's what gets paid.
+>
+> And the last hop, bottom right. The clinic asks the anchor for a rate, gets a
+> firm quote, sends the USDC, and lira lands in their bank account. They see a
+> rate and an IBAN. They never touch crypto.
+>
+> Every step leaves a transaction, and the patient sees them on their own page as
+> links. It's the chain, not my database.
 
 ## Why there are two contracts
 
