@@ -111,6 +111,8 @@ the money, check in, confirm, record the split, release.*
 > Every step leaves a transaction, and the patient sees them on their own page as
 > links. 
 
+
+
 ## Why there are two contracts
 
 *(the "escrow alone" slide)*
@@ -121,43 +123,31 @@ the money, check in, confirm, record the split, release.*
 > But an escrow doesn't know what day it is. It holds money and pays out when it's
 > told to. Someone still has to decide the refund. That's the gap.
 >
-> So the terms go into a second contract before the deposit does, and they lock.
-> On a cancellation it works out the split itself, from the chain's clock, and
+> So the terms go into a second contract before the deposit does, and they lock.  
+> On a cancellation it works out the split itself, from the chain's clock, and  
 > publishes that number before the money moves.
+
+## What's real, what's simulated
+
+*(the honest scope slide)*
+
+> One line on what's real, so nobody has to guess.
 >
-> Two records for every deal: what the contract said, and what actually got paid.
-> If they don't match, anyone can see it.
-
-*Concrete, if asked: at ten days the contract says 4.35 to the patient, 3.91 to
-the clinic, 0.43 to the agency — the record and the payout are both public.*
-
-## What actually ran
-
-> This runs. It's on Stellar testnet.
+> Real: the escrow, the contract, the money. Arrival is seven transactions, a
+> cancellation six, all on testnet, all public. Ten days out the patient got
+> exactly half back — the number the contract worked out is the number that got
+> paid.
 >
-> Patient pays, terms get saved, money locks, clinic checks them in, patient
-> confirms, split gets recorded, money releases. Seven transactions. All public.
+> The lira is real too. Five USDC through the anchor came back as two hundred
+> forty-two lira, with a bank reference.
 >
-> Cancelling is six. Ten days out, the patient got half back. The contract worked
-> out the number and I paid that number.
+> Simulated: the bank transfer at the very end — that's the anchor's side, and
+> this one is a sandbox. The licence check is a static list, not a live ministry
+> query yet. And in the demo one set of keys signs for everybody; in production
+> the patient has their own wallet.
 >
-> The lira works too. Five USDC through the anchor came back as two hundred forty
-> two lira, with a bank reference. The bank transfer itself is sandbox — that's the
-> anchor's side, not mine.
->
-> One thing I only found by testing. Trustless Work takes 0.3 percent when it pays
-> out. So a full refund is really 99.7. It's written on the patient's page now.
-
-
-
-## What isn't finished
-
-> Two things. The licence check is a static list, I don't query the ministry yet.
-> And in the demo my keys sign for everybody. In the real thing the patient has
-> their own wallet and I only hold the key that releases. That's a wallet
-> integration, not a rewrite.
-
-
+> One thing testing turned up: Trustless Work takes 0.3 percent on payouts. So a
+> full refund is really 99.7. That's printed on the patient's page now.
 
 ## Where this goes
 
