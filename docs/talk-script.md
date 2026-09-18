@@ -95,44 +95,47 @@ the money, check in, confirm, record the split, release.*
 
 > So here's the whole thing in one picture.
 >
-> Left is you. Right is the clinic. In the middle, two contracts: the escrow that
-> holds the money, and my contract that holds the terms.
+> Left is patient. Right is the clinic. In the middle, two contracts: the escrow that holds the money, and my contract that holds the terms.
 >
 > Arrival is seven transactions, in this order.
 >
-> The escrow gets created. The cancellation terms get written into the contract,
-> tied to that escrow. The money locks. Then the check-in. Then the confirmation.
-> Then the contract records the split — who gets what, written down before
+> The escrow gets created. The cancellation terms get written into the policy contract,  
+> tied to that escrow. The money locks. Then the check-in. Then the confirmation.  
+> Then the contract records the split — who gets what, written down before  
 > anything moves. And then the money moves.
->
-> Cancelling is six. Same first three. Then the cancellation opens, the contract
-> works out the split from the terms and the date, and that's what gets paid.
->
-> The order is the point. The split is always published before the money goes
-> anywhere.
 >
 > And the last hop, bottom right. The clinic asks the anchor for a rate, gets a
 > firm quote, sends the USDC, and lira lands in their bank account. They see a
 > rate and an IBAN. They never touch crypto.
 >
 > Every step leaves a transaction, and the patient sees them on their own page as
-> links. It's the chain, not my database.
-
-
+> links. 
 
 ## Why there are two contracts
 
 *(the "escrow alone" slide)*
 
-> Two parts. The money sits in Trustless Work. That's an escrow protocol already on
-> Stellar, SCF funded them a few times, they're on the integration list. 
+> Two parts. The money sits in Trustless Work. That's an escrow already on Stellar —
+> SCF funded them, they're on the integration list.
 >
-> But an escrow doesn't know what day it is. When someone cancels, somebody has to tell it who gets what, and sign it.
+> An escrow doesn't know what day it is. Cancel, and someone has to tell it who gets
+> what. That someone is me. So escrow alone means the refund is whatever I sign.
 >
-> So I needed to wrote a second contract.  It does three things. It saves the refund terms before you pay, and they can't be edited after. When someone cancels, it calculates the split itself, off the chain's clock, so I can't pretend the cancellation came earlier than it did. And I have to publish what I'm about to pay before I pay it.
+> That's why the second contract. Terms go in before you pay, locked. Cancel, and it
+> works out the split off the chain's clock. Then I have to write that number down
+> before the money moves. If I pay something else, the two don't match, and anyone
+> can see it.
 >
-> So if I pay something else, anyone can put the two side by side and see it. I can
-> still cheat. Not quietly.
+> I can still cheat. Not quietly.
+
+*If a judge wants it concrete: ten days out, the contract says 4.35 to the
+patient, 3.91 to the clinic, 0.43 to the agency. If 2 went to the patient
+instead, the record says 4.35 and the payment says 2. Nobody has to take my word
+for it — the two numbers are both public.*
+
+*And if they push further — "so you can still do it once": yes, once, visibly.
+The fix is moving the resolver role into the contract itself, which is on the
+roadmap. Today the contract holds the promise; next it holds the payout too.*
 
 
 
