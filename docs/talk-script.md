@@ -88,9 +88,9 @@ older than the deposit — you can check that from the timestamps.*
 >
 >
 
-*Seven transactions from pay to payout. The patient signs two — paying, and
-confirming they're there. The clinic signs one, the check-in. The other four are
-mine: I create the escrow, I write the terms down, I record the split, I release.*
+*Seven transactions from pay to payout. Two are the patient's — paying, and
+confirming. One is the clinic's. The other four run automatically: create the
+escrow, write the terms, record the split, release.*
 
 ## Slide — the architecture
 
@@ -101,16 +101,17 @@ mine: I create the escrow, I write the terms down, I record the split, I release
 > Left is you. Right is the clinic. In the middle, two contracts: the escrow that
 > holds the money, and my contract that holds the terms.
 >
-> Arrival is what I just walked through. Seven transactions in total. You sign
-> two of them — when you pay, and when you confirm you're at the clinic. The
-> clinic signs one, the check-in. The other four are mine: I create the escrow, I
-> write your terms into the contract, I record the split, and I release the money.
+> Arrival is what I just walked through. Seven transactions in total. Two of them
+> are yours — you pay, and you confirm you're at the clinic. One is the clinic's,
+> the check-in. The other four the system does on its own: creates the escrow,
+> writes your terms in, records the split, releases the money. Nobody sits there
+> typing an amount.
 >
-> Cancelling is six, and five of those are mine. You sign nothing — that's the
-> point, you never needed a wallet. My key opens the cancellation, the contract
-> works out the split from the terms and the date, and my second key pays it.
+> Cancelling is six, and you sign none of them. The contract works out the split
+> from the terms and the date, and the payout follows that number. You never
+> needed a wallet at all.
 >
-> So yes — I sign most of them. Which is exactly why the second contract exists.
+> But those four keys are Pacta's. Which is exactly why there's a second contract.
 >
 > And the last hop, bottom right. The clinic asks the anchor for a rate, gets a
 > firm quote, sends the USDC, and lira lands in their bank account. They see a
@@ -197,23 +198,24 @@ Know this cold; don't read it out.
 
 | # | What | Who signs |
 |---|---|---|
-| 1 | Escrow created (roles written in) | Pacta release key |
-| 2 | Cancellation terms committed to the policy contract | Pacta release key |
+| 1 | Escrow created (roles written in) | service, automatic |
+| 2 | Cancellation terms committed to the policy contract | service, automatic |
 | 3 | USDC funded into the escrow | **Patient** |
 | 4 | Milestone marked "arrived" | **Clinic** |
 | 5 | Milestone approved | **Patient** |
-| 6 | Split recorded on the policy contract | Pacta release key |
-| 7 | Escrow released to the clinic | Pacta release key |
+| 6 | Split recorded on the policy contract | service, automatic |
+| 7 | Escrow released to the clinic | service, automatic |
 
-Cancellation replaces 4–7 with three: dispute opened (Pacta release key), split
-recorded (Pacta release key), payout (Pacta **resolver** key — a different key,
-because Trustless Work refuses a resolver that holds any other role). Six total,
-five of them mine, and the patient signs nothing after paying.
+Cancellation replaces 4–7 with three: the dispute is opened, the split is
+recorded, the payout goes out. Six in total, and the patient signs nothing after
+paying. The payout uses a second key, because Trustless Work refuses a dispute
+resolver that holds any other role.
 
-Steps 1 and 2 could be anyone's — they're plumbing, and in production they're
-paid for by us so the clinic doesn't need XLM. Steps 6 and 7 are the ones that
-matter: 7 moves money, and 6 is the promise I publish before 7. That ordering is
-the whole argument of the next slide.
+Steps 6 and 7 are the pair that matters: 7 moves the money, 6 publishes what 7
+will be — always in that order. If a judge presses on who controls those keys,
+the honest answer is Pacta does, and the answer to *that* is the policy contract:
+the terms and the recorded split are public, so a payout that doesn't match them
+is visible to anyone.
 
 ## If someone asks to see it
 
