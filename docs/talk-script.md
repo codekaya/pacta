@@ -127,6 +127,8 @@ the money, check in, confirm, record the split, release.*
 > On a cancellation it works out the split itself, from the chain's clock, and  
 > publishes that number before the money moves.
 
+
+
 ## What's real, what's simulated
 
 *(the honest scope slide)*
@@ -134,20 +136,21 @@ the money, check in, confirm, record the split, release.*
 > One line on what's real, so nobody has to guess.
 >
 > Real: the escrow, the contract, the money. Arrival is seven transactions, a
-> cancellation six, all on testnet, all public. Ten days out the patient got
-> exactly half back — the number the contract worked out is the number that got
-> paid.
+> cancellation six, all on testnet, all public.
 >
-> The lira is real too. Five USDC through the anchor came back as two hundred
-> forty-two lira, with a bank reference.
+> The lira is real too. Five USDC through the test anchor we were given here came
+> back as two hundred forty-two lira, with a bank reference — and it's standard
+> SEPs, so any other anchor is a config change, not a rewrite.
 >
-> Simulated: the bank transfer at the very end — that's the anchor's side, and
-> this one is a sandbox. The licence check is a static list, not a live ministry
-> query yet. And in the demo one set of keys signs for everybody; in production
-> the patient has their own wallet.
+> Simulated: the bank payout at the very end, which is that anchor's sandbox. The
+> licence check is a static list, not a live ministry query yet. And in the demo
+> one set of keys signs for everybody; in production the patient has their own
+> wallet.
 >
 > One thing testing turned up: Trustless Work takes 0.3 percent on payouts. So a
 > full refund is really 99.7. That's printed on the patient's page now.
+
+
 
 ## Where this goes
 
