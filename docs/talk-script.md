@@ -8,9 +8,9 @@ presenting at them. Where a line feels like a slogan, say the plain version.
 
 - Deck on the shared screen. That's the only thing you drive.
 - Two tabs open but not shown, in case a judge asks afterwards: the policy
-  contract on stellar.expert, and an escrow from a run with its three payments.
+contract on stellar.expert, and an escrow from a run with its three payments.
 - Know these four numbers cold: 7 transactions on the arrival path, 6 on a
-  cancellation, 242 lira for 5 USDC, 0.3% Trustless Work fee.
+cancellation, 242 lira for 5 USDC, 0.3% Trustless Work fee.
 
 ---
 
@@ -42,14 +42,17 @@ presenting at them. Where a line feels like a slogan, say the plain version.
 
 //////
 
-> And that happens a lot. You can see with just one quick trustpilot search and reddit threads and review sites  
-> and the pattern is identical every time: take the deposit, stop answering.
+> And that happens a lot. You can see with just one quick trustpilot search   
+> or at reddit threads and review sites  
+> and the pattern is same every time: take the deposit, stop answering.
 >
-> And Turkey knows. Last April the health ministry brought in a whole new medical tourism regulation, but that didnot stopped the complains
+> And it is also known in turkey. Last April the health ministry brought in a whole new medical tourism regulation, but that didnot stopped the complains
 
-## What I built
+## What I built — four slides, one screenshot each
 
-*(architecture slide)*
+Each block below is one slide. Advance when you reach the next heading.
+
+### Slide: the notice
 
 > So I built Pacta.
 >
@@ -57,40 +60,42 @@ presenting at them. Where a line feels like a slogan, say the plain version.
 > number, the date, and what you get back if you cancel. Real dates, real euros.
 > Until the 13th you get all of it. After that half. Last week nothing. You read
 > that before you pay.
->
-> You pay and the money goes into an escrow on Stellar. The clinic doesn't get it.
-> They can see it. They can't spend it.
->
-> Then you fly in. The front desk marks you as arrived, you confirm on your phone,
-> and it releases. Both of you, or nothing moves.
+
+### Slide: the clinic desk
+
+> You pay, and the money goes into an escrow on Stellar. The clinic doesn't get
+> it. They can see it — right there, eight hundred euros. Their wallet says zero.
+> They can't spend it.
+
+### Slide: the QR
+
+> Then you fly in. The front desk marks you as arrived, you confirm on your
+> phone, and it releases. Both of you, or nothing moves.
 >
 > Clinic gets ninety percent, agency ten. The agency still gets paid. They just
 > don't hold the money any more. Today they do.
+
+### Slide: the receipts
+
+> And that one click, when you pay — that's three transactions. The escrow gets
+> created, the cancellation terms get written to a contract, and the money locks.
+> Every line here is a link. It's the chain, not my database.
 >
-> And the clinic takes lira out through a Stellar anchor, straight to their bank
+> Then the clinic takes lira out through a Stellar anchor, straight to their bank
 > account. They never touch crypto.
 >
-> If you cancel, nobody argues with you. You get what the page said.
+> And if you cancel, nobody argues with you. You get what the page said.
 
 ## Why there are two contracts
 
 *(the "escrow alone" slide)*
 
 > Two parts. The money sits in Trustless Work. That's an escrow protocol already on
-> Stellar, SCF funded them a few times, they're on the integration list. I didn't
-> build that.
+> Stellar, SCF funded them a few times, they're on the integration list. 
 >
-> But an escrow doesn't know what day it is. When someone cancels, somebody has to
-> tell it who gets what, and sign it. That somebody is me.
+> But an escrow doesn't know what day it is. When someone cancels, somebody has to tell it who gets what, and sign it.
 >
-> So if I stopped there, nothing really changed. Before, you trusted the clinic.
-> Now you'd trust me.
->
-> So I wrote a second contract. Small one. It does three things. It saves the
-> refund terms before you pay, and they can't be edited after. When someone
-> cancels, it calculates the split itself, off the chain's clock, so I can't
-> pretend the cancellation came earlier than it did. And I have to publish what I'm
-> about to pay before I pay it.
+> So I needed to wrote a second contract.  It does three things. It saves the refund terms before you pay, and they can't be edited after. When someone cancels, it calculates the split itself, off the chain's clock, so I can't pretend the cancellation came earlier than it did. And I have to publish what I'm about to pay before I pay it.
 >
 > So if I pay something else, anyone can put the two side by side and see it. I can
 > still cheat. Not quietly.
@@ -148,11 +153,11 @@ presenting at them. Where a line feels like a slogan, say the plain version.
 You have no demo to break, which is the point. If a judge wants proof:
 
 - Open the escrow tab: three payments, one transaction, the amounts the schedule
-  said. "That's a cancellation, on chain, this morning."
+said. "That's a cancellation, on chain, this morning."
 - Or the contract tab: the terms and the recorded split.
 - Or offer it after: "I can run one end to end for you in about a minute, it's all
-  on testnet." Say that to a judge who is genuinely interested — it's a better
-  conversation than a stage demo anyway.
+on testnet." Say that to a judge who is genuinely interested — it's a better
+conversation than a stage demo anyway.
 
 ## If you only get three minutes
 
