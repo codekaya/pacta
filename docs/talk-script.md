@@ -51,94 +51,95 @@ presenting at them. Where a line feels like a slogan, say the plain version.
 
 *(architecture slide)*
 
-> So that's the problem I picked. Here's what I built for it, and I'll be straight
-> with you about which parts are real.
+> So I built Pacta.
 >
-> The clinic sends the patient a link instead of an IBAN. On that page: the
-> clinic's licence number, the date, and the cancellation terms — written as dates
-> and euros, not percentages. Until this date you get everything back, after that
-> half, last week nothing. The patient reads it before paying, not after.
+> The clinic sends a link instead of a bank account. The page has the licence
+> number, the date, and what you get back if you cancel. Real dates, real euros.
+> Until the 13th you get all of it. After that half. Last week nothing. You read
+> that before you pay.
 >
-> The patient pays, and the money goes into an escrow on Stellar. Not to the
-> clinic. The clinic can see it sitting there and can't touch it.
+> You pay and the money goes into an escrow on Stellar. The clinic doesn't get it.
+> They can see it. They can't spend it.
 >
-> When the patient shows up, the front desk checks them in, the patient confirms
-> from their phone, and only then does the escrow release — both sides, or it
-> doesn't move. Clinic gets ninety percent, agency ten. The agency still gets paid,
-> it just never holds the money, which is how it works today.
+> Then you fly in. The front desk marks you as arrived, you confirm on your phone,
+> and it releases. Both of you, or nothing moves.
 >
-> And then the clinic takes lira out through a Stellar anchor, at a locked rate,
-> straight to a bank account. As far as the clinic is concerned it never touched
-> crypto.
+> Clinic gets ninety percent, agency ten. The agency still gets paid. They just
+> don't hold the money any more. Today they do.
 >
-> If the patient cancels instead, nobody emails anyone. The refund is whatever the
-> schedule said on the day they booked.
+> And the clinic takes lira out through a Stellar anchor, straight to their bank
+> account. They never touch crypto.
+>
+> If you cancel, nobody argues with you. You get what the page said.
 
 ## Why there are two contracts
 
 *(the "escrow alone" slide)*
 
-> Two pieces. Trustless Work holds the money — that's an escrow protocol already on
-> Stellar, SCF has funded them several times, they're on the integration list. I
-> didn't rebuild that.
+> Two parts. The money sits in Trustless Work. That's an escrow protocol already on
+> Stellar, SCF funded them a few times, they're on the integration list. I didn't
+> build that.
 >
-> But their escrow doesn't know what day it is. When someone cancels, somebody has
-> to tell it "send this much to the patient, this much to the clinic" and sign it.
-> And that somebody is me.
+> But an escrow doesn't know what day it is. When someone cancels, somebody has to
+> tell it who gets what, and sign it. That somebody is me.
 >
-> So if I stopped there, I'd have moved the problem, not fixed it. Before, you had
-> to trust the clinic. Now you'd have to trust me.
+> So if I stopped there, nothing really changed. Before, you trusted the clinic.
+> Now you'd trust me.
 >
-> So I wrote one small contract, and its whole job is to keep me honest. Three
-> things. Before the patient pays, it stores the refund terms — and they can't be
-> edited after. When someone cancels, the contract works out the split itself,
-> using the chain's clock, so I can't pretend the cancellation happened earlier to
-> pay out less. And I have to write down what I'm about to pay, on chain, before I
-> pay it.
+> So I wrote a second contract. Small one. It does three things. It saves the
+> refund terms before you pay, and they can't be edited after. When someone
+> cancels, it calculates the split itself, off the chain's clock, so I can't
+> pretend the cancellation came earlier than it did. And I have to publish what I'm
+> about to pay before I pay it.
 >
-> So if I send something different from what the contract says, the two don't
-> match, and anyone can see it. It doesn't make cheating impossible. It makes it
-> obvious. I'd rather tell you that than have you find it.
+> So if I pay something else, anyone can put the two side by side and see it. I can
+> still cheat. Not quietly.
 
 ## What actually ran
 
-> And this isn't a mockup. I ran the whole thing on Stellar testnet.
+> This runs. It's on Stellar testnet.
 >
-> The arrival path — pay, commit the terms, lock the money, check in, confirm,
-> record the split, release — is seven transactions, and they're all on chain. A
-> cancellation ten days out is six, and the patient got exactly half back: the
-> contract worked out the split, I paid that, and both are public.
+> Patient pays, terms get saved, money locks, clinic checks them in, patient
+> confirms, split gets recorded, money releases. Seven transactions. All public.
 >
-> The lira side is real too. Five USDC out through the anchor came back as two
-> hundred forty-two lira, with a bank reference. The only simulated part is the
-> bank wire itself, because that's the sandbox anchor — in production that's the
-> anchor's job, not mine.
+> Cancelling is six. Ten days out, the patient got half back. The contract worked
+> out the number and I paid that number.
 >
-> One thing I only found by measuring: Trustless Work takes 0.3% on payouts. So a
-> hundred percent refund actually lands as 99.7. It's printed on the patient's page
-> now, because they should see it before they pay.
+> The lira works too. Five USDC through the anchor came back as two hundred forty
+> two lira, with a bank reference. The bank transfer itself is sandbox — that's the
+> anchor's side, not mine.
+>
+> One thing I only found by testing. Trustless Work takes 0.3 percent when it pays
+> out. So a full refund is really 99.7. It's written on the patient's page now.
 
 ## What isn't finished
 
-> What's not finished, so nobody has to guess. The clinic licence check is a
-> static list right now, not a live registry call. And in the demo my own keys sign
-> for everyone — in the real thing the patient signs with their own embedded
-> wallet, and I only ever hold the release key. That's the next piece of work, and
-> it's a wallet integration, not a rewrite.
+> Two things. The licence check is a static list, I don't query the ministry yet.
+> And in the demo my keys sign for everybody. In the real thing the patient has
+> their own wallet and I only hold the key that releases. That's a wallet
+> integration, not a rewrite.
 
 ## Where this goes
 
-> Business side is simple. Clinic pays one to one and a half percent. Cards cost
-> them two and a half to four plus chargebacks after the patient flies home. Patient
-> pays nothing.
+> Right now I have a list of over a hundred clinics and I'm messaging all of them
+> this week, looking for the first pilot. Nothing signed yet.
 >
-> Next is pilot clinics, embedded wallets so the patient doesn't think about any of
-> this, agency split on-chain, audit, mainnet. And SCF Integration Track in November —
-> the nice thing there is my metrics are just two numbers anyone can count off the
-> contract: how much is held, and how many deals closed.
+> The money side is simple. Clinic pays one to one and a half percent. Cards cost
+> them two and a half to four, plus chargebacks after the patient flies home.
+> Patient pays nothing.
 >
-> What I actually need right now is two clinics willing to try it, and an intro for
-> the Integration Track. That's it — happy to take questions.
+> And this isn't only hair transplants. It's a deposit, a date, and a refund
+> schedule. Dental, IVF, surgery. Same contract, the clinic picks its own numbers.
+>
+> It isn't only Turkey either. Thailand, Mexico, Hungary, same story. The only
+> local part is the payout, and that's the anchor. Swap the anchor, everything else
+> stays.
+>
+> It's not even only medical. Anyone paying a deposit to a stranger, for a date in
+> the future. That's what I built. I started with the one I know.
+>
+> What I need is two clinics to try it, and an intro for the SCF Integration Track
+> in November. That's it.
 
 ---
 
@@ -165,16 +166,16 @@ the dispute resolver — that's the one that makes the rest credible.
 
 After the technical bit:
 
-> Small thing I liked: I need two separate keys, because Trustless Work won't let the
-> dispute resolver hold any other role. And the key that releases can also open a
-> dispute — which means when a patient cancels, they don't sign anything at all.
-> That's what lets someone pay without ever setting up a wallet.
+> One detail I liked. Trustless Work won't let the same key resolve disputes and do
+> anything else, so I run two. And the key that releases can also open a dispute.
+> Which means when a patient cancels, they don't sign anything. That's what lets
+> someone pay without ever setting up a wallet.
 
 And after what's real:
 
-> The refund math exists twice, once in Rust on-chain and once in TypeScript in the
-> app, with a shared test vector so they agree exactly. If they ever disagree, the
-> app refuses to send the payout.
+> The refund math is written twice. Once in the contract, once in the app. They
+> share a test, so they have to agree exactly. If they ever don't, the app refuses
+> to pay.
 
 ## Sources for the problem section
 
