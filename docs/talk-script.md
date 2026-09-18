@@ -36,87 +36,76 @@
 >
 > And it is also known in turkey. Last April the health ministry brought in a whole new medical tourism regulation, but that didnot stopped the complains
 
-## What I built — one slide at a time
+## What I built — one block per screenshot slide
 
-Four slides, one screenshot each. Under each one: what you say, and what is
-actually happening behind that click if you want to go deeper. Say the plain
-version first, always. The indented lines are optional depth — use them if the
-room is technical or someone asks.
+Four slides, four presses. Each block is what you say while that screenshot is up.
+The indented line under each is the plumbing — say it if the room is technical,
+skip it if you're tight on time.
 
 ### Slide 1 — the notice
 
 > So I built Pacta.
 >
 > The clinic sends a link instead of a bank account. The page has the licence
-> number, the date, and what you get back if you cancel. Real dates, real euros.
-> Until the 13th you get all of it. After that half. Last week nothing. You read
-> that before you pay.
+> number, the date, and what you get back if you cancel. Until the 13th you get
+> all of it. After that half. Last week nothing. You read that before you pay.
 
-*Deeper, if asked:* nothing is on chain yet at this point. The page is just the
-offer. The terms only become permanent at the moment of payment — which is the
-next slide, and that ordering is the whole design.
+*Nothing has touched the chain yet. This page is just the offer.*
 
 ### Slide 2 — the clinic desk
 
-> You pay, and the money goes into an escrow on Stellar. The clinic doesn't get
-> it. They can see it — eight hundred euros, right there. Their wallet says zero.
-> They can't spend it.
+> Now you press pay. And that one press is three transactions.
 >
-> And that one click is three transactions.
+> First it creates the escrow — that's a fresh contract for this one deal, with
+> four addresses written into it: you, the clinic, and two of my keys.
 >
-> First, an escrow gets deployed — its own contract, for this one deposit, with
-> the roles fixed: you approve, the clinic provides, I can release but I'm not the
-> receiver.
+> Second, it writes the cancellation terms into my contract, tied to that escrow.
+> The dates and the percentages you just read. After that they can't be edited.
 >
-> Second, the cancellation terms go into my contract, tied to that escrow. That's
-> before the money moves. The terms are locked before anyone can touch anything.
+> Third, your money goes in. USDC, locked in that escrow.
 >
-> Third, your USDC goes in. That one you sign.
+> And here's the clinic's screen after that. Eight hundred euros, sitting there.
+> Their wallet says zero. They can see it, they can't spend it.
 
-*Deeper, if asked:* the order matters. Deploy, commit the policy, then fund. If
-the policy went in afterwards I could wait to see whether you cancel and then
-write terms that suit me. And the contract only accepts one policy per escrow, so
-there is no second version of the truth.
+*Order matters: the terms are committed before the money lands. So the promise is
+older than the deposit — you can check that from the timestamps.*
 
 ### Slide 3 — the QR
 
-> Then you fly in. The front desk marks you as arrived — that's one transaction,
-> signed by the clinic, and it moves no money. Then you confirm on your phone.
-> Both of you, or nothing moves.
+> Then you fly in.
 >
-> When you confirm, three things happen: your approval goes on chain, my contract
-> reads the live escrow balance and records who gets what, and then the escrow
-> pays out.
+> The front desk presses "patient has arrived". That's one transaction, signed
+> with the clinic's key, and it moves nothing — it just marks the escrow.
+>
+> The desk shows this QR, you scan it, and it opens your own page on your phone.
+> You press confirm. That's three more: your confirmation, then my contract
+> writing down the split before anyone gets paid, then the release.
+>
+> Both of you, or nothing moves. The clinic can't release on its own. And it can't
+> be released against you.
 >
 > Clinic gets ninety percent, agency ten. The agency still gets paid. They just
 > don't hold the money any more. Today they do.
 
-*Deeper, if asked:* the split is recorded before the payout, not after. So the
-promise is on chain first and the money follows it — that's the ordering that
-makes it checkable.
+*Seven transactions from pay to payout, and I sign two of them.*
 
 ### Slide 4 — the receipts
 
-> Every step leaves a line here, and every line is a transaction you can open.
-> Escrow deployed, policy committed, money locked, clinic marked arrival. It's the
-> chain, not my database.
+> And this is what you get as a patient. Not a status badge from my database —
+> the actual list. Escrow created, terms committed, money locked, clinic marked
+> arrival. Every line is a link to the chain.
 >
-> And cancelling is the same shape. I open the cancellation with my own key, so
-> you don't sign anything — you already left. My contract works out the split from
-> the terms and the chain's clock. I compare it to what my server calculated, and
-> if those two disagree the payout doesn't go out at all. Then the escrow pays
-> three people in one transaction: you, the clinic, the agency.
+> Then the clinic takes lira out. It asks the anchor for a rate, gets a firm quote,
+> sends the USDC, and the anchor pays their bank account in lira. They never touch
+> crypto — they see a rate and an IBAN.
 >
-> Then the clinic takes lira out through a Stellar anchor, straight to their bank
-> account. They log in with their key, the anchor locks a rate, the USDC goes
-> across, the lira lands. They never touch crypto.
->
-> And if you cancel, nobody argues with you. You get what the page said.
+> And if you cancel, nobody argues with you. My key opens the dispute — you don't
+> sign anything, you don't need a wallet. The contract works out the split from the
+> terms and the date. Then it gets paid. Six transactions, and you get exactly what
+> the page said.
 
-*Deeper, if asked:* the lira side is five standard Stellar protocols in a row —
-login, KYC, a firm quote, the withdrawal, then the payment with the anchor's memo
-on it. That's why swapping countries is swapping one anchor, not rewriting
-anything.
+*If someone asks why the patient doesn't sign the cancellation: the key that
+releases is also allowed to open a dispute, so cancelling needs nothing from them.*
 
 ## Why there are two contracts
 
