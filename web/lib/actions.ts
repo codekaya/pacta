@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { cancel, lock, markArrived, release } from './escrow';
 import { dealStore, demoDealTemplate, withdrawalStore, type Deal } from './deals';
+import { parseUsdc } from './money';
 import { withdrawToTry } from './offramp';
-import { DAY_SECONDS } from './policy';
+import { DAY_SECONDS, validatePolicy, type Policy, type PolicyIssue, type Tier } from './policy';
 import { demoWallets } from './wallets';
 
 async function mustGet(id: string): Promise<Deal> {
@@ -80,4 +82,94 @@ export async function withdrawTry(formData: FormData): Promise<void> {
 
   await withdrawalStore.add(await withdrawToTry(w.clinic, amount, iban));
   revalidatePath('/clinic');
+}
+
+// ---------------------------------------------------------------- kapora oluşturma
+
+/**
+ * EUR → USDC. Üründe bu bir SEP-38 teklifi olacak: klinik tutarı avro yazar,
+ * escrow'a kilitlenen USDC o anki kurla belirlenir ve teklif referansı anlaşmaya
+ * yazılır. v1'de sabit — demo fikstürünün kuru (€800 = 869.5652174 USDC).
+ */
+const EUR_PER_USDC = 0.92;
+
+export type CreateDealState = { issues: PolicyIssue[] } | undefined;
+
+/**
+ * Kliniğin kapora bildirimi oluşturması.
+ *
+ * Politika buradan geçmeden hiçbir yere yazılmaz: aynı kurallar zincirde
+ * `commit` tarafından da uygulanıyor ve orada reddedilmesi, kliniğin hastaya
+ * çoktan fiyat söylemiş olması demek.
+ */
+export async function createDeal(_prev: CreateDealState, formData: FormData): Promise<CreateDealState> {
+  const wallets = demoWallets();
+  const text = (name: string) => String(formData.get(name) ?? '').trim();
+
+  const issues: PolicyIssue[] = [];
+  const procedure = text('procedure');
+  if (!procedure) issues.push({ field: 'procedure', message: 'Name the procedure.' });
+
+  const depositEurCents = parseEurCents(text('deposit'));
+  if (depositEurCents === undefined || depositEurCents <= 0) {
+    issues.push({ field: 'deposit', message: 'Enter the deposit in euros, for example 800.' });
+  }
+
+  // Klinik saat seçmiyor; işlem günü yerel saatle 09:00 kabul edilir.
+  const procedureDate = Date.parse(`${text('procedureDate')}T09:00:00+03:00`) / 1000;
+  if (Number.isNaN(procedureDate)) {
+    issues.push({ field: 'procedureDate', message: 'Pick the procedure date.' });
+  }
+
+  const agencyName = text('agencyName') || undefined;
+  const agencyBps = agencyName ? Math.round(Number(text('agencyPct') || '0') * 100) : 0;
+
+  const tiers = readTiers(formData);
+  const policy: Policy = { procedureDate, tiers, agencyBps };
+
+  const parties = {
+    // Üründe hasta kendi cüzdanıyla imzalar; bu satır o cüzdanın bağlanacağı yer.
+    patient: wallets?.patient.publicKey() ?? 'PATIENT',
+    clinic: wallets?.clinic.publicKey() ?? 'CLINIC',
+    ...(agencyName ? { agency: wallets?.agency.publicKey() ?? 'AGENCY' } : {}),
+  };
+
+  if (!Number.isNaN(procedureDate)) {
+    issues.push(...validatePolicy(policy, parties, new Date()));
+  }
+  if (issues.length > 0) return { issues };
+
+  const deal = await dealStore.create({
+    clinicId: text('clinicId'),
+    procedure,
+    depositEurCents: depositEurCents!,
+    escrowAmount: parseUsdc((depositEurCents! / 100 / EUR_PER_USDC).toFixed(7)),
+    policy,
+    parties,
+    agencyName,
+  });
+
+  revalidatePath('/clinic');
+  redirect(`/clinic?new=${deal.id}`);
+}
+
+/** "800" veya "1.250,50" değil — "800" / "800.50". Cent'e çevirir. */
+function parseEurCents(value: string): number | undefined {
+  if (!/^\d+(\.\d{1,2})?$/.test(value)) return undefined;
+  return Math.round(Number(value) * 100);
+}
+
+/** Form satırları: tierDays[] ve tierPct[] eşleşerek gelir; boş satırlar atılır. */
+function readTiers(formData: FormData): Tier[] {
+  const days = formData.getAll('tierDays').map(String);
+  const pcts = formData.getAll('tierPct').map(String);
+  const tiers: Tier[] = [];
+  for (let i = 0; i < days.length; i += 1) {
+    if (days[i]!.trim() === '' && pcts[i]!.trim() === '') continue;
+    tiers.push({
+      minDaysBefore: Math.trunc(Number(days[i])),
+      refundBps: Math.round(Number(pcts[i]) * 100),
+    });
+  }
+  return tiers;
 }

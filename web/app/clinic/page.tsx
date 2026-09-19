@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import QRCode from 'qrcode';
+import { CopyLink } from '@/components/CopyLink';
 import { Frame, Wordmark } from '@/components/Frame';
 import { SubmitButton } from '@/components/SubmitButton';
 import { cancelDeal, checkIn, withdrawTry } from '@/lib/actions';
@@ -20,7 +21,10 @@ const STATUS: Record<Deal['status'], string> = {
   refunded: 'Cancelled — policy applied',
 };
 
-export default async function ClinicDesk() {
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function ClinicDesk({ searchParams }: Props) {
+  const justCreated = firstValue((await searchParams).new);
   const deals = await dealStore.list();
   const withdrawals = await withdrawalStore.list();
   const wallets = demoWallets();
@@ -47,8 +51,18 @@ export default async function ClinicDesk() {
         </div>
 
         <header className="border-t border-rule py-10">
-          <p className="font-mono text-[11px] tracking-[0.16em] text-muted uppercase">Front desk</p>
-          <h1 className="mt-3 font-serif text-4xl tracking-[-0.03em]">{clinicName}</h1>
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <p className="font-mono text-[11px] tracking-[0.16em] text-muted uppercase">Front desk</p>
+              <h1 className="mt-3 font-serif text-4xl tracking-[-0.03em]">{clinicName}</h1>
+            </div>
+            <Link
+              href="/clinic/new"
+              className="inline-flex min-h-11 items-center justify-center bg-ink px-5 text-[15px] tracking-wide text-paper transition-colors duration-150 hover:bg-oxblood focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              New deposit notice
+            </Link>
+          </div>
           <dl className="mt-8 grid gap-6 sm:grid-cols-3">
             <Figure label="Held in escrow">
               {held.length === 0 ? '—' : formatEur(held.reduce((sum, d) => sum + d.depositEurCents, 0))}
@@ -57,6 +71,17 @@ export default async function ClinicDesk() {
             <Figure label="Today’s rate">{quote ? `${quote.rate} TL / USDC` : '—'}</Figure>
           </dl>
         </header>
+
+        {justCreated && deals.some((d) => d.id === justCreated) && (
+          <section className="border-t border-rule py-8">
+            <p className="font-serif text-xl tracking-[-0.02em] text-forest">Notice ready.</p>
+            <p className="mt-2 mb-4 max-w-[58ch] text-sm leading-relaxed text-muted">
+              Send this to the patient. Opening it is all they need to do — no account, no wallet.
+              Anyone with the link can pay it, so send it the way you already send the appointment.
+            </p>
+            <CopyLink url={`${origin}/d/${justCreated}`} />
+          </section>
+        )}
 
         <section className="border-t border-rule py-10">
           <h2 className="font-serif text-2xl tracking-[-0.02em]">Deposits</h2>
@@ -174,7 +199,12 @@ async function DealRow({ deal, origin }: { deal: Deal; origin: string }) {
             </figcaption>
           </figure>
         )}
-        {deal.status === 'created' && <p className="text-sm text-muted">Notice sent. Nothing to do yet.</p>}
+        {deal.status === 'created' && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted">Awaiting payment. Resend the link if it went astray.</p>
+            <CopyLink url={noticeUrl} />
+          </div>
+        )}
       </div>
     </li>
   );
@@ -258,4 +288,8 @@ function toBase(balance: string): bigint {
 
 function trimUsdc(balance: string): string {
   return balance.replace(/\.?0+$/, '');
+}
+
+function firstValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }

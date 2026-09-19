@@ -7,6 +7,7 @@ import {
   distribute,
   entitlement,
   policyRows,
+  validatePolicy,
   DAY_SECONDS,
   type Policy,
 } from './policy.ts';
@@ -132,4 +133,57 @@ test('ajans yoksa payı kliniğe eklenir', () => {
 
 test('sıfır bakiye reddedilir', () => {
   assert.throws(() => distribute(0n, entitlement(policy, at(DAY_SECONDS)), parties));
+});
+
+// ---------------------------------------------------------------- doğrulama
+
+// check_terms (contracts/policy/src/lib.rs) ile aynı kuralları uyguladığını
+// kilitler. Buradaki her test kontratın error.rs'indeki bir varyanta karşılık gelir.
+
+const future = new Date(PROCEDURE * 1000 - 30 * DAY_SECONDS * 1000);
+const withTiers = (tiers: Policy['tiers']): Policy => ({ ...policy, tiers });
+
+test('geçerli politika hiç sorun üretmez', () => {
+  assert.deepEqual(validatePolicy(policy, parties, future), []);
+});
+
+test('kademesiz politika reddedilir (NoTiers)', () => {
+  assert.equal(validatePolicy(withTiers([]), parties, future).length, 1);
+});
+
+test('sekizden fazla kademe reddedilir (TooManyTiers)', () => {
+  const many = Array.from({ length: 9 }, (_, i) => ({ minDaysBefore: i, refundBps: 0 }));
+  assert.match(validatePolicy(withTiers(many), parties, future)[0]!.message, /At most 8/);
+});
+
+test('aynı gün sınırına sahip iki kademe reddedilir (DuplicateTier)', () => {
+  const dupes = [
+    { minDaysBefore: 7, refundBps: 10_000 },
+    { minDaysBefore: 7, refundBps: 5_000 },
+  ];
+  assert.match(validatePolicy(withTiers(dupes), parties, future)[0]!.message, /own cutoff/);
+});
+
+test('sınır dışı iade oranı reddedilir (BpsOutOfRange)', () => {
+  const over = [{ minDaysBefore: 0, refundBps: 10_001 }];
+  assert.equal(validatePolicy(withTiers(over), parties, future).length, 1);
+});
+
+test('geçmiş işlem tarihi reddedilir (ProcedureInPast)', () => {
+  const after = new Date((PROCEDURE + 1) * 1000);
+  assert.match(validatePolicy(policy, parties, after)[0]!.message, /in the future/);
+});
+
+test('taraflar çakışırsa reddedilir (PartiesOverlap)', () => {
+  const overlap = { patient: 'SAME', clinic: 'SAME' };
+  assert.match(validatePolicy(policy, overlap, future)[0]!.message, /different accounts/);
+});
+
+// Kontratın umursamadığı, ürünün umursadığı kural.
+test('geç iptalin erken iptalden cömert olması reddedilir', () => {
+  const inverted = [
+    { minDaysBefore: 14, refundBps: 5_000 },
+    { minDaysBefore: 7, refundBps: 10_000 },
+  ];
+  assert.match(validatePolicy(withTiers(inverted), parties, future)[0]!.message, /cannot refund more/);
 });

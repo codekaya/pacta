@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import type { Parties, Policy } from './policy';
 import { parseUsdc } from './money';
 import { kvGet, kvPush, kvSet, kvValues } from './kv';
@@ -88,6 +90,7 @@ export interface DealStore {
   get(id: string): Promise<Deal | undefined>;
   list(): Promise<Deal[]>;
   save(deal: Deal): Promise<void>;
+  create(input: NewDeal): Promise<Deal>;
 }
 
 const DEMO_CLINIC: Clinic = {
@@ -128,6 +131,42 @@ const DEMO_DEAL: Deal = {
   createdAt: Date.parse('2026-09-16T14:20:00+03:00') / 1000,
 };
 
+/**
+ * Klinik kütüğü. v1'de tek kayıt, ama anlaşma artık kliniği kimliğiyle taşıyor;
+ * klinik kaydı (onboarding) geldiğinde bu haritanın arkası veritabanı olur ve
+ * çağıran hiçbir yer değişmez.
+ */
+const CLINICS: Record<string, Clinic> = { [DEMO_CLINIC.id]: DEMO_CLINIC };
+
+export function clinicById(id: string): Clinic | undefined {
+  return CLINICS[id];
+}
+
+export function clinics(): Clinic[] {
+  return Object.values(CLINICS);
+}
+
+/**
+ * Bildirim linki hastanın tek kimliği — oturum yok, parola yok. Yani id
+ * tahmin edilebilir olmamalı: demo fikstürünün `d-8f3a91`'i altı hex, denenerek
+ * bulunur. Üretilen her anlaşma 128 bit rastgelelik taşır.
+ */
+export function newDealId(): string {
+  return `d-${randomBytes(16).toString('base64url')}`;
+}
+
+/** Kliniğin formda doldurduğu her şey. Taraflar çağıranın sorumluluğunda. */
+export type NewDeal = {
+  clinicId: string;
+  procedure: string;
+  depositEurCents: number;
+  /** Escrow'a kilitlenecek USDC, taban birim. */
+  escrowAmount: bigint;
+  policy: Policy;
+  parties: Parties;
+  agencyName?: string;
+};
+
 /** Bump when the demo fixture copy changes, so stored deals are reseeded. */
 const SEED = 5;
 const key = (id: string) => `pacta:${SEED}:deal:${id}`;
@@ -152,6 +191,24 @@ export const dealStore: DealStore = {
   },
   async save(deal) {
     await kvSet(key(deal.id), deal);
+  },
+  async create(input) {
+    const clinic = clinicById(input.clinicId);
+    if (!clinic) throw new Error(`Unknown clinic: ${input.clinicId}`);
+    const deal: Deal = {
+      id: newDealId(),
+      clinic,
+      agencyName: input.agencyName,
+      procedure: input.procedure,
+      depositEurCents: input.depositEurCents,
+      escrowAmount: input.escrowAmount,
+      policy: input.policy,
+      parties: input.parties,
+      status: 'created',
+      createdAt: Math.floor(Date.now() / 1000),
+    };
+    await kvSet(key(deal.id), deal);
+    return deal;
   },
 };
 

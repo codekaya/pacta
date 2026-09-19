@@ -169,3 +169,72 @@ export function policyRows(policy: Policy): PolicyRow[] {
 export function applyBps(amount: number, bps: number): number {
   return Math.floor((amount * bps) / 10_000);
 }
+
+// ---------------------------------------------------------------- doğrulama
+
+/** Kontrattaki `MAX_TIERS` ile aynı olmak zorunda. */
+export const MAX_TIERS = 8;
+
+export type PolicyIssue = { field: string; message: string };
+
+/**
+ * `contracts/policy/src/lib.rs` içindeki `check_terms`'ün aynası.
+ *
+ * Buradan geçemeyen bir politika zincirde `commit` tarafından reddedilir — ama
+ * o noktada klinik hastaya çoktan bir fiyat söylemiş olur. Ucuz olduğu tek yer
+ * form. Sıra ve mesaj, kontratın hata listesini (error.rs) izler.
+ */
+export function validatePolicy(policy: Policy, parties: Parties, now: Date): PolicyIssue[] {
+  const issues: PolicyIssue[] = [];
+  const tiers = policy.tiers;
+
+  if (tiers.length === 0) {
+    issues.push({ field: 'tiers', message: 'A schedule needs at least one row.' });
+  }
+  if (tiers.length > MAX_TIERS) {
+    issues.push({ field: 'tiers', message: `At most ${MAX_TIERS} rows; this has ${tiers.length}.` });
+  }
+  if (policy.agencyBps < 0 || policy.agencyBps > 10_000) {
+    issues.push({ field: 'agencyBps', message: 'The agency share must be between 0% and 100%.' });
+  }
+
+  const seen = new Set<number>();
+  for (const tier of tiers) {
+    if (tier.refundBps < 0 || tier.refundBps > 10_000) {
+      issues.push({ field: 'tiers', message: 'Every refund must be between 0% and 100%.' });
+    }
+    if (tier.minDaysBefore < 0) {
+      issues.push({ field: 'tiers', message: 'A row cannot start after the procedure date.' });
+    }
+    if (seen.has(tier.minDaysBefore)) {
+      issues.push({
+        field: 'tiers',
+        message: `Two rows both start ${tier.minDaysBefore} days before. Each row needs its own cutoff.`,
+      });
+    }
+    seen.add(tier.minDaysBefore);
+  }
+
+  // Kontratın umursamadığı ama hastaya gösterilemeyecek bir şey: geç iptal
+  // etmenin erken iptal etmekten cömert olması. Neredeyse her zaman giriş hatası.
+  const ordered = byDaysDesc(tiers);
+  for (let i = 1; i < ordered.length; i += 1) {
+    if (ordered[i]!.refundBps > ordered[i - 1]!.refundBps) {
+      issues.push({
+        field: 'tiers',
+        message: 'Cancelling later cannot refund more than cancelling earlier.',
+      });
+      break;
+    }
+  }
+
+  if (policy.procedureDate * 1000 <= now.getTime()) {
+    issues.push({ field: 'procedureDate', message: 'The procedure date must be in the future.' });
+  }
+
+  if (parties.patient === parties.clinic || parties.agency === parties.patient || parties.agency === parties.clinic) {
+    issues.push({ field: 'parties', message: 'Patient, clinic and agency must be different accounts.' });
+  }
+
+  return issues;
+}

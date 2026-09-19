@@ -7,7 +7,7 @@ import { SubmitButton } from '@/components/SubmitButton';
 import { cancelDeal, confirmArrival, fundDeal, resetDeal } from '@/lib/actions';
 import { Receipts } from '@/components/Receipts';
 import { escrowMode, LIVE_SCALE } from '@/lib/escrow';
-import { dealStore, type Deal } from '@/lib/deals';
+import { DEMO_DEAL_ID, dealStore, type Deal } from '@/lib/deals';
 import { formatDate, formatDateLong, formatEur, formatUsdcDisplay, parseUsdc } from '@/lib/money';
 import { applyBps, entitlement, DAY_SECONDS } from '@/lib/policy';
 
@@ -231,10 +231,17 @@ function SettlementPanel({ deal }: { deal: Deal }) {
   );
 }
 
+/**
+ * Sahne kontrolleri, yalnızca demo fikstüründe.
+ *
+ * `resetDeal` başka bir anlaşmayı zaten reddediyor; kliniğin kendi yazdığı bir
+ * bildirimde bu düğmeleri göstermek çalışmayan bir şey göstermek olurdu.
+ */
 function DemoControls({ deal }: { deal: Deal }) {
+  const isFixture = deal.id === DEMO_DEAL_ID;
   // Live settlements use ledger time, so previewing another date would mislead.
   const live = (deal.mode ?? escrowMode()) === 'live';
-  const jumps = live
+  const jumps = live || !isFixture
     ? []
     : [20, 10, 3].map((days) => ({
         days,
@@ -263,20 +270,24 @@ function DemoControls({ deal }: { deal: Deal }) {
           Today
         </Link>
       )}
-      <span className="ml-auto font-mono text-[11px] tracking-[0.14em] text-muted uppercase">Restart, procedure in</span>
-      {[20, 10, 3].map((days) => (
-        <form key={days} action={resetDeal.bind(null, deal.id, days)}>
-          <button
-            type="submit"
-            className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-          >
-            {days}d
-          </button>
-        </form>
-      ))}
+      {isFixture && (
+        <>
+          <span className="ml-auto font-mono text-[11px] tracking-[0.14em] text-muted uppercase">Restart, procedure in</span>
+          {[20, 10, 3].map((days) => (
+            <form key={days} action={resetDeal.bind(null, deal.id, days)}>
+              <button
+                type="submit"
+                className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+              >
+                {days}d
+              </button>
+            </form>
+          ))}
+        </>
+      )}
       <Link
         href="/clinic"
-        className="min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+        className={`min-h-10 text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink ${isFixture ? '' : 'ml-auto'}`}
       >
         Clinic desk →
       </Link>
