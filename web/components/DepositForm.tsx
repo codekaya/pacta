@@ -95,18 +95,21 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
             Once the deposit is paid, nobody can edit them — including you.
           </p>
 
-          <div className="flex flex-wrap gap-x-5 gap-y-2">
-            {TEMPLATES.map((template) => (
-              <button
-                key={template.name}
-                type="button"
-                onClick={() => setTiers(template.tiers)}
-                className="min-h-10 text-left text-sm text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-              >
-                {template.name}
-                <span className="ml-2 font-mono text-[11px] text-muted/80">{template.note}</span>
-              </button>
-            ))}
+          <div>
+            <p className="font-mono text-[11px] tracking-[0.12em] text-muted uppercase">Start from</p>
+            <div className="mt-2 grid gap-px bg-rule sm:grid-cols-3">
+              {TEMPLATES.map((template) => (
+                <button
+                  key={template.name}
+                  type="button"
+                  onClick={() => setTiers(template.tiers)}
+                  className="bg-paper px-4 py-3 text-left transition-colors duration-150 hover:bg-ink/[0.04] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+                >
+                  <span className="block text-[15px] text-ink">{template.name}</span>
+                  <span className="mt-0.5 block text-sm leading-snug text-muted">{template.note}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <table className="w-full text-sm">
