@@ -11,7 +11,7 @@ export function CopyLink({ url }: { url: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <code className="min-w-0 truncate border border-rule bg-ink/[0.03] px-3 py-2 font-mono text-[12px] text-muted">
+      <code className="min-w-0 flex-1 truncate border border-rule bg-panel px-3 py-2 font-mono text-[11px] text-muted">
         {url}
       </code>
       <button
@@ -26,7 +26,7 @@ export function CopyLink({ url }: { url: string }) {
             setCopied(false);
           }
         }}
-        className="min-h-10 border border-ink/25 px-4 text-sm text-ink transition-colors duration-150 hover:border-ink hover:bg-ink/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="min-h-10 shrink-0 border border-ink/25 px-4 font-mono text-[11px] tracking-[0.04em] text-muted uppercase transition-colors duration-150 hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         {copied ? 'Copied' : 'Copy link'}
       </button>

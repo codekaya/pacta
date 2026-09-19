@@ -6,9 +6,14 @@
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 
   --color-paper: #f3eee4;
+  /* Yoğun blokların zemini: aynı kağıt, bir ton çökmüş. */
+  --color-panel: #eae2d3;
   --color-ink: #1a1612;
   --color-muted: #534c43;
-  --color-rule: #d4cbbc;
+  /* İnce yazı ve üçüncül işaretler. Kağıtta AA'yı 11px'te taşımaz, o yüzden
+     yalnızca okunması şart olmayan yerlerde. */
+  --color-faint: #8b8175;
+  --color-rule: #cbc0ae;
   --color-oxblood: #6b2d28;
   --color-forest: #2c4a38;
 }
@@ -25,6 +30,31 @@ body {
 ::selection {
   background: var(--color-ink);
   color: var(--color-paper);
+}
+
+/*
+ * Belge grameri.
+ *
+ * Çift çizgi bölüm sınırı, tek çizgi satır ayracı. İkisi farklı şeyler söylüyor;
+ * her yerde aynı hairline'ı kullanmak sayfayı tek ritme düşüren şeydi.
+ */
+.rule-major {
+  border-top: 3px double var(--color-rule);
+}
+
+/* Enstrümanın omurgası: etiket sabit genişlikte bir sütun, değer onun hizasında
+   başlar. justify-between değil — o, formu havalandırıp belge olmaktan çıkarıyor. */
+.entry {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0 1rem;
+  align-items: baseline;
+}
+
+@media (max-width: 480px) {
+  .entry {
+    grid-template-columns: 6.5rem 1fr;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -2,6 +2,7 @@
 
 import { useActionState, useId, useState } from 'react';
 import { createDeal, type CreateDealState } from '@/lib/actions';
+import { Beneficiary, Entry, FinePrint, Principal } from '@/components/Instrument';
 import { PolicyTable } from '@/components/PolicyTable';
 import { SubmitButton } from '@/components/SubmitButton';
 import type { Clinic } from '@/lib/deals';
@@ -59,71 +60,81 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
     setTiers((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
 
   return (
-    <form action={action} className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <form action={action} className="grid gap-10 lg:grid-cols-12 lg:gap-14">
       <input type="hidden" name="clinicId" value={clinic.id} />
 
-      <div className="flex flex-col gap-10 lg:col-span-7">
+      <div className="flex flex-col gap-8 lg:col-span-7">
         <Issues state={state} />
 
-        <fieldset className="flex flex-col gap-5">
-          <Legend>The booking</Legend>
-          <Field
-            label="Procedure"
-            name="procedure"
-            value={procedure}
-            onChange={setProcedure}
-            placeholder="Six implants, zirconia crowns"
-          />
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Procedure date" name="procedureDate" type="date" value={date} onChange={setDate} />
+        <fieldset>
+          <Legend>Particulars</Legend>
+          <div className="mt-4 flex flex-col gap-4">
             <Field
-              label="Deposit, EUR"
-              name="deposit"
-              value={deposit}
-              onChange={setDeposit}
-              placeholder="800"
-              inputMode="decimal"
+              label="Instrument"
+              name="procedure"
+              value={procedure}
+              onChange={setProcedure}
+              placeholder="Six implants, zirconia crowns"
             />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Maturity" name="procedureDate" type="date" value={date} onChange={setDate} />
+              <Field
+                label="Principal, EUR"
+                name="deposit"
+                value={deposit}
+                onChange={setDeposit}
+                placeholder="800"
+                inputMode="decimal"
+              />
+            </div>
           </div>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-5">
-          <Legend>If the patient cancels</Legend>
-          <p className="-mt-2 max-w-[56ch] text-sm leading-relaxed text-muted">
-            Each row is a cutoff: cancel that many days before the procedure or earlier, and the
-            patient gets back that share. The patient sees these as calendar dates, not percentages.
-            Once the deposit is paid, nobody can edit them — including you.
-          </p>
+        <fieldset>
+          <Legend>Schedule of redemption</Legend>
 
-          <div>
-            <p className="font-mono text-[11px] tracking-[0.12em] text-muted uppercase">Start from</p>
+          <div className="mt-3">
+            <FinePrint>
+              Each row is a cutoff: cancel that many days before the maturity date or earlier, and the
+              patient redeems that share. The patient reads these as calendar dates and euro amounts,
+              not percentages. Once the deposit is funded the schedule is committed and nobody can
+              amend it — including you.
+            </FinePrint>
+          </div>
+
+          <div className="mt-4">
+            <p className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">Start from</p>
             <div className="mt-2 grid gap-px bg-rule sm:grid-cols-3">
               {TEMPLATES.map((template) => (
                 <button
                   key={template.name}
                   type="button"
                   onClick={() => setTiers(template.tiers)}
-                  className="bg-paper px-4 py-3 text-left transition-colors duration-150 hover:bg-ink/[0.04] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+                  className="bg-paper px-3 py-2.5 text-left transition-colors duration-150 hover:bg-panel focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
                 >
-                  <span className="block text-[15px] text-ink">{template.name}</span>
-                  <span className="mt-0.5 block text-sm leading-snug text-muted">{template.note}</span>
+                  <span className="block font-mono text-[13px] text-ink">{template.name}</span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-faint">{template.note}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <table className="w-full text-sm">
+          <table className="mt-5 w-full border-collapse font-mono text-[13px]">
             <thead>
-              <tr className="text-left font-mono text-[11px] tracking-[0.12em] text-muted uppercase">
+              <tr className="border-b border-rule text-left text-[11px] tracking-[0.04em] text-muted uppercase">
+                <th className="w-12 py-2 pr-3 text-right font-normal">№</th>
                 <th className="py-2 font-normal">Days before, or more</th>
-                <th className="py-2 font-normal">Patient gets back</th>
+                <th className="py-2 font-normal">Redeems</th>
                 <th className="w-10 py-2" />
               </tr>
             </thead>
             <tbody>
               {tiers.map((tier, index) => (
-                <tr key={index} className="border-t border-rule">
-                  <td className="py-2 pr-3">
+                <tr key={index} className="border-b border-rule">
+                  <td className="w-12 border-r border-rule py-2 pr-3 text-right text-[11px] text-faint tabular-nums">
+                    {String(index + 1).padStart(2, '0')}
+                  </td>
+                  <td className="py-2 pl-3">
                     <Cell
                       name="tierDays"
                       value={tier.days}
@@ -132,7 +143,7 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
                       suffix="days"
                     />
                   </td>
-                  <td className="py-2 pr-3">
+                  <td className="py-2">
                     <Cell
                       name="tierPct"
                       value={tier.pct}
@@ -141,13 +152,13 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
                       suffix="%"
                     />
                   </td>
-                  <td className="py-2">
+                  <td className="py-2 text-right">
                     {tiers.length > 1 && (
                       <button
                         type="button"
                         onClick={() => setTiers((rows) => rows.filter((_, i) => i !== index))}
                         aria-label={`Remove row ${index + 1}`}
-                        className="size-10 text-muted hover:text-oxblood focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                        className="size-9 text-faint hover:text-oxblood focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                       >
                         ×
                       </button>
@@ -155,6 +166,14 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
                   </td>
                 </tr>
               ))}
+              <tr className="border-b border-rule">
+                <td className="w-12 border-r border-rule py-2 pr-3 text-right text-[11px] text-faint">
+                  {'——'}
+                </td>
+                <td className="py-2 pl-3 text-muted">Clinic cancels, or the licence lapses</td>
+                <td className="py-2 text-muted tabular-nums">100%</td>
+                <td />
+              </tr>
             </tbody>
           </table>
 
@@ -162,31 +181,26 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
             <button
               type="button"
               onClick={() => setTiers((rows) => [...rows, { days: '', pct: '' }])}
-              className="self-start min-h-10 text-sm text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+              className="mt-3 min-h-9 font-mono text-[12px] text-muted underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
             >
-              Add a row
+              + Add a row
             </button>
           )}
-
-          <p className="font-mono text-[11px] leading-relaxed text-muted">
-            A clinic cancellation always refunds in full. That row is not editable — it is what makes
-            the schedule fair enough to show.
-          </p>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-5">
-          <Legend>Agency, if the booking came through one</Legend>
-          <div className="grid gap-5 sm:grid-cols-2">
+        <fieldset>
+          <Legend>Introducing agency</Legend>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field
-              label="Agency name"
+              label="Agency"
               name="agencyName"
               value={agencyName}
               onChange={setAgencyName}
-              placeholder="Leave blank for a direct booking"
+              placeholder="Blank for a direct booking"
             />
             {agencyName && (
               <Field
-                label="Agency share of what the clinic keeps, %"
+                label="Share of what the clinic keeps, %"
                 name="agencyPct"
                 value={agencyPct}
                 onChange={setAgencyPct}
@@ -196,19 +210,19 @@ export function DepositForm({ clinic }: { clinic: Clinic }) {
           </div>
         </fieldset>
 
-        <div className="flex flex-col gap-3 border-t border-rule pt-8">
-          <SubmitButton pendingLabel="Writing the notice…">Create the notice</SubmitButton>
-          <p className="text-sm leading-relaxed text-muted">
-            Nothing touches the chain yet. The escrow is deployed and the schedule is committed when
-            the patient pays.
-          </p>
+        <div className="flex flex-col gap-3 border-t border-rule pt-6">
+          <SubmitButton pendingLabel="Drawing up the undertaking…">Issue the notice</SubmitButton>
+          <FinePrint>
+            Nothing touches the chain yet. The escrow is deployed and the schedule committed when the
+            patient funds the deposit, in that order.
+          </FinePrint>
         </div>
       </div>
 
       <aside className="lg:col-span-5">
-        <div className="lg:sticky lg:top-10">
-          <p className="font-mono text-[11px] tracking-[0.16em] text-muted uppercase">
-            What the patient sees
+        <div className="lg:sticky lg:top-6">
+          <p className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">
+            As the patient will read it
           </p>
           <Preview
             clinic={clinic}
@@ -238,7 +252,7 @@ type PreviewProps = {
 };
 
 /**
- * Hastanın göreceği bildirimin aynısı, aynı bileşenle. Klinik yüzde giriyor ama
+ * Hastanın göreceği belgenin aynısı, aynı bileşenlerle. Klinik yüzde giriyor ama
  * hasta takvim tarihi ve avro görüyor — aradaki çeviriyi yazarken görmek,
  * kademeleri yanlış kurmanın önündeki tek gerçek engel.
  */
@@ -247,34 +261,42 @@ function Preview({ clinic, procedure, date, deposit, agencyName, agencyPct, tier
   const cents = /^\d+(\.\d{1,2})?$/.test(deposit) ? Math.round(Number(deposit) * 100) : undefined;
 
   return (
-    <article className="mt-4 border-t border-ink pt-6">
-      <p className="font-serif text-[1.65rem] leading-tight tracking-[-0.02em]">{clinic.name}</p>
-      <p className="mt-1.5 text-sm text-muted">{clinic.city}</p>
-      <p className="mt-3 font-mono text-[11px] text-muted">Health tourism licence {clinic.licenseNo}</p>
+    <article className="mt-2 border border-rule bg-panel p-5">
+      <Beneficiary name={clinic.name} city={clinic.city} />
+      <p className="mt-2 font-mono text-[11px] text-faint">
+        Health tourism licence {clinic.licenseNo}
+      </p>
 
-      <dl className="mt-8 space-y-3 text-[15px]">
-        <PreviewRow label="Procedure">{procedure || <Blank>Not named yet</Blank>}</PreviewRow>
-        <PreviewRow label="Date">
-          {policy ? formatDateLong(new Date(policy.procedureDate * 1000)) : <Blank>No date yet</Blank>}
-        </PreviewRow>
-        <PreviewRow label="Deposit">
-          {cents !== undefined ? (
-            <span className="font-serif text-2xl tabular-nums">{formatEur(cents)}</span>
-          ) : (
-            <Blank>No amount yet</Blank>
-          )}
-        </PreviewRow>
-        {agencyName && <PreviewRow label="Agency">{agencyName}</PreviewRow>}
+      <dl className="mt-5">
+        <Entry label="Instrument">{procedure || <Blank>unstated</Blank>}</Entry>
+        <Entry label="Maturity">
+          {policy ? formatDateLong(new Date(policy.procedureDate * 1000)) : <Blank>unstated</Blank>}
+        </Entry>
+        {agencyName && <Entry label="Introduced by">{agencyName}</Entry>}
       </dl>
 
-      <div className="mt-8">
+      {cents !== undefined ? (
+        <Principal label="Principal due" amount={formatEur(cents)} />
+      ) : (
+        <div className="border-b border-rule py-3">
+          <p className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">Principal due</p>
+          <p className="mt-1 font-mono text-[2rem] leading-none text-faint">—</p>
+        </div>
+      )}
+
+      <div className="mt-5">
         {policy && cents !== undefined ? (
-          <PolicyTable policy={policy} depositEurCents={cents} at={new Date()} />
+          <>
+            <p className="mb-2 font-mono text-[11px] tracking-[0.04em] text-muted uppercase">
+              Schedule of redemption
+            </p>
+            <PolicyTable policy={policy} depositEurCents={cents} at={new Date()} />
+          </>
         ) : (
-          <p className="border-t border-rule pt-6 text-sm leading-relaxed text-muted">
-            Fill in the date and the deposit, and the cancellation schedule appears here exactly as
-            the patient will read it — calendar dates and euro amounts.
-          </p>
+          <FinePrint>
+            Enter the maturity date and the principal, and the schedule appears here exactly as the
+            patient will read it — calendar dates and euro amounts, not percentages.
+          </FinePrint>
         )}
       </div>
     </article>
@@ -304,8 +326,10 @@ function draftPolicy(date: string, tiers: TierDraft[], agencyPct: string): Polic
 function Issues({ state }: { state: CreateDealState }) {
   if (!state || state.issues.length === 0) return null;
   return (
-    <div role="alert" className="border-l-2 border-oxblood bg-oxblood/[0.06] px-4 py-3">
-      <p className="text-sm text-oxblood">This notice cannot be written yet:</p>
+    <div role="alert" className="border-l-2 border-oxblood bg-oxblood/[0.07] px-4 py-3">
+      <p className="font-mono text-[11px] tracking-[0.04em] text-oxblood uppercase">
+        Cannot be issued
+      </p>
       <ul className="mt-2 flex flex-col gap-1">
         {state.issues.map((issue, i) => (
           <li key={i} className="text-sm leading-relaxed text-oxblood">
@@ -319,7 +343,7 @@ function Issues({ state }: { state: CreateDealState }) {
 
 function Legend({ children }: { children: React.ReactNode }) {
   return (
-    <legend className="w-full border-b border-rule pb-3 font-serif text-xl tracking-[-0.02em] text-ink">
+    <legend className="rule-major w-full pt-3 font-mono text-[11px] tracking-[0.04em] text-muted uppercase">
       {children}
     </legend>
   );
@@ -339,7 +363,7 @@ function Field({ label, name, value, onChange, type = 'text', placeholder, input
   const id = useId();
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm text-muted">
+      <label htmlFor={id} className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">
         {label}
       </label>
       <input
@@ -350,7 +374,7 @@ function Field({ label, name, value, onChange, type = 'text', placeholder, input
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         inputMode={inputMode}
-        className="min-h-11 border border-ink/25 bg-transparent px-3 font-mono text-[15px] text-ink placeholder:text-muted/60 focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="min-h-11 border border-ink/25 bg-transparent px-3 font-mono text-[14px] text-ink placeholder:text-faint focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       />
     </div>
   );
@@ -377,22 +401,13 @@ function Cell({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         inputMode="numeric"
-        className="min-h-11 w-20 border border-ink/25 bg-transparent px-3 text-right font-mono text-[15px] tabular-nums text-ink focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="min-h-10 w-16 border border-ink/25 bg-transparent px-2 text-right font-mono text-[14px] tabular-nums text-ink focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       />
-      <span className="font-mono text-[11px] text-muted">{suffix}</span>
+      <span className="font-mono text-[11px] text-faint">{suffix}</span>
     </span>
   );
 }
 
-function PreviewRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline justify-between gap-6 border-b border-rule pb-3">
-      <dt className="shrink-0 text-muted">{label}</dt>
-      <dd className="min-w-0 text-right break-words">{children}</dd>
-    </div>
-  );
-}
-
 function Blank({ children }: { children: React.ReactNode }) {
-  return <span className="text-muted/60 italic">{children}</span>;
+  return <span className="text-faint">{children}</span>;
 }
