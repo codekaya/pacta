@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cancel, lock, markArrived, release } from './escrow';
 import { dealStore, demoDealTemplate, withdrawalStore, type Deal } from './deals';
-import { parseUsdc } from './money';
+import { EUR_PER_USDC, parseUsdc } from './money';
 import { withdrawToTry } from './offramp';
 import { DAY_SECONDS, validatePolicy, type Policy, type PolicyIssue, type Tier } from './policy';
 import { demoWallets } from './wallets';
@@ -86,12 +86,6 @@ export async function withdrawTry(formData: FormData): Promise<void> {
 
 // ---------------------------------------------------------------- kapora oluşturma
 
-/**
- * EUR → USDC. Üründe bu bir SEP-38 teklifi olacak: klinik tutarı avro yazar,
- * escrow'a kilitlenen USDC o anki kurla belirlenir ve teklif referansı anlaşmaya
- * yazılır. v1'de sabit — demo fikstürünün kuru (€800 = 869.5652174 USDC).
- */
-const EUR_PER_USDC = 0.92;
 
 export type CreateDealState = { issues: PolicyIssue[] } | undefined;
 

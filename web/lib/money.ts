@@ -1,4 +1,11 @@
 /** USDC on Stellar has 7 decimals; every on-chain amount is stored in base units. */
+
+/**
+ * EUR → USDC. Üründe bu bir SEP-38 teklifi olacak: klinik tutarı avro yazar,
+ * escrow'a kilitlenen USDC o anki kurla belirlenir ve teklif referansı anlaşmaya
+ * yazılır. v1'de sabit — demo fikstürünün kuru (€800 = 869.5652174 USDC).
+ */
+export const EUR_PER_USDC = 0.92;
 export const USDC_DECIMALS = 7;
 const SCALE = 10n ** BigInt(USDC_DECIMALS);
 

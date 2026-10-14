@@ -11,6 +11,8 @@ const config: NextConfig = {
   turbopack: { root },
   outputFileTracingRoot: root,
   agentRules: false,
+  // Klinik fotoğrafları Unsplash CDN'inden, boyutu yükleyici ekler (lib/image-loader.ts).
+  images: { loader: 'custom', loaderFile: './lib/image-loader.ts' },
 };
 
 export default config;

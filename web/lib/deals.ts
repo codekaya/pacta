@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 
+import { CATALOG } from './clinics';
 import type { Parties, Policy } from './policy';
 import { parseUsdc } from './money';
 import { kvGet, kvPush, kvSet, kvValues } from './kv';
@@ -136,7 +137,16 @@ const DEMO_DEAL: Deal = {
  * klinik kaydı (onboarding) geldiğinde bu haritanın arkası veritabanı olur ve
  * çağıran hiçbir yer değişmez.
  */
-const CLINICS: Record<string, Clinic> = { [DEMO_CLINIC.id]: DEMO_CLINIC };
+const CLINICS: Record<string, Clinic> = {
+  [DEMO_CLINIC.id]: DEMO_CLINIC,
+  // Demo kataloğu (lib/clinics.ts): /clinics üzerinden rezervasyon bu kayıtlara bildirim yazar.
+  ...Object.fromEntries(
+    CATALOG.filter((c) => c.id !== DEMO_CLINIC.id).map((c) => [
+      c.id,
+      { id: c.id, name: c.name, city: `${c.district}, ${c.city}`, licenseNo: c.licenseNo, verified: true, verifiedAt: c.verifiedAt },
+    ]),
+  ),
+};
 
 export function clinicById(id: string): Clinic | undefined {
   return CLINICS[id];

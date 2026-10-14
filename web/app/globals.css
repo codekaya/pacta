@@ -5,21 +5,32 @@
   --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 
-  --color-paper: #f3eee4;
-  /* Yoğun blokların zemini: aynı kağıt, bir ton çökmüş. */
-  --color-panel: #eae2d3;
-  --color-ink: #1a1612;
-  --color-muted: #534c43;
-  /* İnce yazı ve üçüncül işaretler. Kağıtta AA'yı 11px'te taşımaz, o yüzden
-     yalnızca okunması şart olmayan yerlerde. */
-  --color-faint: #8b8175;
-  --color-rule: #cbc0ae;
-  --color-oxblood: #6b2d28;
-  --color-forest: #2c4a38;
+  /* Logodan: çember #6EDBE2 → #00455B, gövde mint #B2F9E9 → teal #03727B, zemin #BEE6F0 → beyaz. */
+  --color-paper: #ffffff;
+  --color-canvas: #f6fbfc;
+  --color-mist: #eaf7fa;
+  --color-sky: #c9eef5;
+  --color-foam: #b2f9e9;
+  --color-mint: #5fe8d6;
+  --color-aqua: #21bfca;
+  --color-teal: #038c9c;
+  /* Küçük metinde teal: beyaz üstünde AA (5.1:1). */
+  --color-held: #067a83;
+  --color-deep: #00455b;
+  --color-ink: #0b2f3a;
+  --color-muted: #557380;
+  --color-rule: #dceaee;
+  --color-alert: #b42318;
 }
 
 html {
   color-scheme: light;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -28,33 +39,127 @@ body {
 }
 
 ::selection {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--color-foam);
+  color: var(--color-deep);
 }
 
-/*
- * Belge grameri.
- *
- * Çift çizgi bölüm sınırı, tek çizgi satır ayracı. İkisi farklı şeyler söylüyor;
- * her yerde aynı hairline'ı kullanmak sayfayı tek ritme düşüren şeydi.
- */
-.rule-major {
-  border-top: 3px double var(--color-rule);
+/* Logonun zemini: sol üstte gök mavisi, sağda mint, aşağı doğru beyaza açılır. */
+.bg-aura {
+  background:
+    radial-gradient(70rem 38rem at 0% -10%, #c4e9f3 0%, transparent 62%),
+    radial-gradient(50rem 30rem at 100% 10%, #dcf8f2 0%, transparent 60%),
+    linear-gradient(180deg, #f2fafc 0%, #ffffff 100%);
 }
 
-/* Enstrümanın omurgası: etiket sabit genişlikte bir sütun, değer onun hizasında
-   başlar. justify-between değil — o, formu havalandırıp belge olmaktan çıkarıyor. */
-.entry {
-  display: grid;
-  grid-template-columns: 8.5rem 1fr;
-  gap: 0 1rem;
-  align-items: baseline;
-}
-
-@media (max-width: 480px) {
-  .entry {
-    grid-template-columns: 6.5rem 1fr;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 700ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Yaşayan kart: durum değişince yeni içerik yumuşakça belirir; ilerleme çubuğu dolar. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fade-in {
+  animation: fade-in 450ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Harita: aktif şehrin nabzı ve uçuş çizgilerinin akışı. */
+@keyframes ping {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+.map-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ping 1.8s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+@keyframes flight {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+.map-flight {
+  stroke-dasharray: 2 10;
+  animation: flight 2.4s linear infinite;
+}
+
+/* İade takvimi kaydırıcısı. */
+.schedule-range {
+  appearance: none;
+  width: 100%;
+  height: 2.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+.schedule-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-mist);
+}
+.schedule-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-mist);
+}
+.schedule-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: calc(-0.75rem + 3px);
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 6px solid var(--color-teal);
+  box-shadow: 0 4px 12px -2px rgb(0 69 91 / 0.35);
+}
+.schedule-range::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 6px solid var(--color-teal);
+  box-shadow: 0 4px 12px -2px rgb(0 69 91 / 0.35);
+}
+.schedule-range:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 4px;
+  border-radius: 999px;
 }
 
 @media (prefers-reduced-motion: reduce) {

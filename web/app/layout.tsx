@@ -8,6 +8,8 @@ const serif = Newsreader({
   variable: '--font-newsreader',
   display: 'swap',
   style: ['normal', 'italic'],
+  // Optik boyut: büyük başlıklar logodaki ince, yüksek kontrastlı kesimle çizilir.
+  axes: ['opsz'],
 });
 
 const sans = Public_Sans({
