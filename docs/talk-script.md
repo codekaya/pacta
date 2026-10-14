@@ -74,15 +74,22 @@ older than the deposit — you can check that from the timestamps.*
 
 ### Slide 3 — the QR
 
-> Then you fly in. The front desk marks you as arrived, you scan the QR and
-> confirm on your own phone — and only then does the escrow release.
+> Then you fly in.
 >
-> Both sides, or nothing moves. Clinic ninety percent, agency ten: the agency
-> still gets paid, it just never holds the money.
+> The front desk presses "patient has arrived". That's one transaction, signed
+> with the clinic's key, and it moves nothing — it just marks the escrow.
+>
+> The desk shows this QR, you scan it, and it opens your own page on your phone.
+> You press confirm. That's three more: your confirmation, then my contract
+> writing down the split before anyone gets paid, then the release.
+>
+> Both of you, or nothing moves. The clinic can't release on its own. And it can't
+> be released against you.
 
-## Slide — the architecture
+*Seven transactions from pay to payout: create the escrow, commit the terms, lock
+the money, check in, confirm, record the split, release.*
 
-*(the diagram. This is where you tie the whole thing together.)*
+## Slide — the architecturee*(the diagram. This is where you tie the whole thing together.)*
 
 > So here's the whole thing in one picture.
 >
@@ -140,17 +147,52 @@ older than the deposit — you can check that from the timestamps.*
 
 ## Where this goes
 
-> Right now I scrapped a list of over a 50 clinics and I will be messaging all of them this week, looking for the first pilot. Nothing signed yet.
+> I pitched this two days ago and got two pieces of feedback from the Stellar
+> team. Both of them changed what I'm doing next, so let me just tell you what
+> they were.
 >
-> It isn't only Turkey either. Thailand, Mexico, Hungary, same story. The only
-> local part is the payout, and that's the anchor. Swap the anchor, everything else
-> stays.
+> **The first one was: why are you selling to clinics.**
 >
-> It's not even only medical. Anyone paying a deposit to a stranger, for a date in
-> the future. That's what I built. I started with the one I know.
+> And they're right. I scraped a list of fifty-something clinics and I was going
+> to message all of them this week. But the party that actually holds the deposit
+> today is the agency. They take the money, they pass it to the clinic — so they
+> carry all of the trust and none of the margin. And one agency is thirty clinics.
 >
-> What I need is two clinics to try it, and an intro for the SCF Integration Track
-> in November. That's it.
+> So I'm cutting that list again, for agencies. It costs me nothing to change:
+> the agency is already a role in the contract, with its own address and its own
+> cut, paid out of the same escrow. I was just pointing at the wrong door.
+>
+> **The second one was privacy** — someone sent me the Trustless Work privacy
+> proof of concept, confidential tokens. So I went and read it.
+>
+> And I found something I hadn't thought about. My contract writes the patient's
+> address, the clinic's address and the procedure date to a public ledger. The
+> clinic's address never changes. So anyone can take that one address, pull every
+> deal under it, and read off who had a procedure there, on what date, and whether
+> they showed up.
+>
+> For a hair transplant clinic, or IVF — that's health data. On a ledger you
+> can't delete from. Most of these patients are in Germany and France, so that's
+> GDPR.
+>
+> So privacy isn't a nice-to-have for me. It's the thing standing between this and
+> real patients on mainnet.
+>
+> And the part I'm happy about: my policy contract is already blind to money. The
+> terms are percentages and dates — there's no amount in them. The only place a
+> number appears at all is the function that records the split. So confidential
+> amounts is one function in my contract, not a rewrite.
+>
+> That work is a proof of concept on their side, not mainnet-ready, and I'm not
+> claiming I've done it. But I think medical tourism is the strongest case anyone
+> on that integration list can make for why it needs to exist.
+>
+> Past that: it isn't only Turkey — Thailand, Mexico, Hungary, same story, and the
+> only local part is the anchor. And it isn't only medical. It's a deposit, a
+> date, and a refund schedule. I started with the one I know.
+>
+> What I need is two pilots — and after this week I'd rather one of them was an
+> agency — and an intro for the SCF Integration Track in November. That's it.
 
 ---
 
@@ -269,6 +311,14 @@ work.
 split. What stops me is that it's visible — the terms and the split are on-chain and
 anyone can recompute them. Moving the resolver role into a contract is on the
 roadmap, and that removes it entirely.
+
+**"So is it private or not?"** Not today — and I'd rather say that than dress it up.
+Everything the policy contract holds is public: both addresses, the procedure date,
+the schedule, and the split once it settles. What is *not* on chain is the procedure
+itself, the clinic's name and the patient's documents — those stay off it. The fix
+is confidential amounts, and Trustless Work already has a proof of concept for that.
+The reason I can integrate it cheaply is that my terms are percentages and dates,
+with no amount in them at all.
 
 **"Why are the amounts so small on testnet?"** Sandbox anchor caps transfers, so the
 demo runs at one hundredth scale. The math is identical, and the tests run at full
