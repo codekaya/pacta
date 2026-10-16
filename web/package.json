@@ -5,6 +5,7 @@
   "description": "Pacta: patient deposit notice, clinic desk, dual-confirm arrival",
   "license": "Apache-2.0",
   "scripts": {
+    "postinstall": "npm ci --prefix ../anchor --no-audit --no-fund",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
